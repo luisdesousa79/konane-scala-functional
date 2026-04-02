@@ -1,5 +1,26 @@
 import scala.collection.parallel.immutable.ParMap
 
+trait RandomWithState {
+  def nextInt: (Int, RandomWithState)
+  def nextInt(n: Int): (Int, RandomWithState)
+}
+
+case class MyRandom(seed: Long) extends RandomWithState {
+  def nextInt: (Int, RandomWithState) = {
+    val newSeed = (seed * 0x5DEECE66DL + 0xBL) & 0xFFFFFFFFFFFFL
+    val nextRandom = MyRandom(newSeed)
+    val n = (newSeed >>> 16).toInt
+    (n, nextRandom)
+  }
+
+  def nextInt(n: Int): (Int, RandomWithState) = {
+    val newSeed = (seed * 0x5DEECE66DL + 0xBL) & 0xFFFFFFFFFFFFL
+    val nextRandom = MyRandom(newSeed)
+    val nn = ((newSeed >>> 16).toInt) % n
+    (if (nn < 0) -nn else nn, nextRandom)
+  }
+}
+
 object Konane:
 
   type Coord2D = (Int, Int)
@@ -8,19 +29,64 @@ object Konane:
 
   enum Stone: 
     case Black, White
-    
-  def play(board: Board, player: Stone, coordFrom: Coord2D, coordTo: Coord2D, 
-           lstOpenCoords: List[Coord2D]): (Option[Board], List[Coord2D])
-      ???
-    
-  def playRandomly(board: Board, r: MyRandom, player: Stone, 
-                   lstOpenCoords: List[Coord2D], f: (List[Coord2D], MyRandom) => 
-    (Coord2D, MyRandom)): (Option[Board], MyRandom, List[Coord2D], Option[Coord2D])
 
-    val (coord, newRand) = f(lstOpenCoords, r)
+  
+  
+  // função que implementa um movimento aleatório
+  def randomMove(lstOpenCoords: List[Coord2D], rand: MyRandom): (Coord2D, MyRandom) = {
+    // se não há coordenadas para onde jogar lança excepção
+    if(lstOpenCoords.isEmpty) { 
+      // aqui devíamos ter uma maneira de dizer que o jogador perdeu o jogo, em vez de lançar uma excepção
+      throw new Exception("não há posições para onde jogar!")
+    } else
+      // caso contrário, escolhe aleatoricamente um índice da lista de coordenadas vazias
+      // atenção que isto não procura posições jogáveis (Adjacentes) - isso é feito pela função play
+        val (randomIndex, newRand) = rand.nextInt(lstOpenCoords.length)
+        val coord = lstOpenCoords(randomIndex)
+        (coord, newRand)
+  }
+
+  // função que inicializa o tabuleiro
+  def initBoard(n: Int) = ???
+  
+  // função auxiliar para determinar se uma determinada posição é uma posição jogável para uma peça dada
+  def isValidPlay(board: Board, origin: Coord2D, destination: Coord2D): Boolean = {
+    ???
+  }
+  
+  def play(board: Board, player: Stone, coordFrom: Coord2D, coordTo: Coord2D, 
+           lstOpenCoords: List[Coord2D]): (Option[Board], List[Coord2D]) = ???
+    
+  def playRandomly(board: Board, r: MyRandom, player: Stone, lstOpenCoords: List[Coord2D],
+                   f: (List[Coord2D], MyRandom) => (Coord2D, MyRandom)):
+                    (Option[Board], MyRandom, List[Coord2D], Option[Coord2D]) =
+
+    // filtra as peças disponíveis do jogador que está a jogar
+    val myPieces = board.toList.filter(x => x._2 == player)
+
+    // faz uma lista de coordenadas onde estão posicionadas as peças do jogador que está a jogar
+    val myCoords = board.toList.filter(x => x._2 == player).map(x => x._1)
+
+    // se não há peças, não faz nada
+    if (myCoords.isEmpty) then
+      (None, r, lstOpenCoords, None)
+      //no caso em que há peças
+      else
+
+      // escolhe aleatoriamente uma coordenada de origem
       
-    val (newBoard, newLstOpenCoords) = play(board, player, lstOpenCoords)
-      
-      ???
+      val (coordFrom, newRand) = f(myCoords, r)
+
+      // escolhe coordenada de destino aleatoriamente
+      val (coordTo, newRand2) = f(lstOpenCoords, newRand)
+
+      // move a peça da coordenada de origem para a de destino
+      val (newBoard, newLstOpenCoords) = play(board, player, coordFrom, coordTo, lstOpenCoords)
+
+      newBoard match
+        case None => (None, newRand2,lstOpenCoords, None)
+        case Some(newBoard) => (Some(newBoard), newRand2, newLstOpenCoords, Some(coordTo))
+
+
 
 
