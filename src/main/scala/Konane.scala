@@ -52,11 +52,36 @@ object Konane:
   
   
   // função auxiliar para determinar se uma determinada posição é uma posição jogável para uma peça dada
-  // incompleta!!!!
-  def isValidPlay(board: Board, player: Stone, origin: Coord2D, destination: Coord2D): Boolean = {
-    board.get(origin) match
-      case player => !board.contains(destination)
-      case _ => false
+  def isValidPlay(board: Board, player: Stone, origin: Coord2D, destination: Coord2D, lstOpenCoords: List[Coord2D]): Boolean = {
+      
+      // vai buscar as coordenadas de origem e destino
+      val (x1, y1) = origin
+      val (x2, y2) = destination
+      
+      // calcula a direcção
+      val dx = x2 - x1
+      val dy = y2 - y1
+      
+      // define um valor booleano que representa uma direcção válida de movimento
+      val validDirection  = (math.abs(dx) == 2 && dy == 0) || (math.abs(dy) == 2 && dx == 0)
+
+      if (!validDirection) then false
+      else
+        // calcula a posição intermédia sobre a qual vai saltar
+        val middle =((x1 + x2) / 2, (y1 + y2)/2)
+
+        board.get(origin) match
+          // verifica se é o player que está na posição de origem 
+          case Some(p) if p == player =>
+          // verifica se é o adversário que está na posição intermédia (que vai ser comida)
+            board.get(middle) match
+              case Some(opponent) if opponent != player =>
+                // a posição de destino tem de estar vazia, isto é, não pode estar contida no board
+                lstOpenCoords.contains(destination)
+
+              case _ => false
+
+          case _ => false
   }
   
   // função de jogada
