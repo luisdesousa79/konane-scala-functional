@@ -47,36 +47,42 @@ object Konane:
   }
 
   // função que inicializa o tabuleiro
+  // incompleta
   def initBoard(n: Int) = ???
   
+  
   // função auxiliar para determinar se uma determinada posição é uma posição jogável para uma peça dada
-  def isValidPlay(board: Board, origin: Coord2D, destination: Coord2D): Boolean = {
-    ???
+  // incompleta!!!!
+  def isValidPlay(board: Board, player: Stone, origin: Coord2D, destination: Coord2D): Boolean = {
+    board.get(origin) match
+      case player => !board.contains(destination)
+      case _ => false
   }
   
+  // função de jogada
+  // incompleta!!!
   def play(board: Board, player: Stone, coordFrom: Coord2D, coordTo: Coord2D, 
-           lstOpenCoords: List[Coord2D]): (Option[Board], List[Coord2D]) = ???
+           lstOpenCoords: List[Coord2D]): (Option[Board], List[Coord2D]) =
+    if (isValidPlay(board, player, coordFrom, coordTo)) then
+      
+    else
+      (None, lstOpenCoords)
     
   def playRandomly(board: Board, r: MyRandom, player: Stone, lstOpenCoords: List[Coord2D],
                    f: (List[Coord2D], MyRandom) => (Coord2D, MyRandom)):
                     (Option[Board], MyRandom, List[Coord2D], Option[Coord2D]) =
 
-    // filtra as peças disponíveis do jogador que está a jogar
-    val myPieces = board.toList.filter(x => x._2 == player)
-
     // faz uma lista de coordenadas onde estão posicionadas as peças do jogador que está a jogar
     val myCoords = board.toList.filter(x => x._2 == player).map(x => x._1)
 
     // se não há peças, não faz nada
-    if (myCoords.isEmpty) then
-      (None, r, lstOpenCoords, None)
+    if myCoords.isEmpty then (None, r, lstOpenCoords, None)
       //no caso em que há peças
-      else
+    else
 
       // escolhe aleatoriamente uma coordenada de origem
-      
       val (coordFrom, newRand) = f(myCoords, r)
-
+      
       // escolhe coordenada de destino aleatoriamente
       val (coordTo, newRand2) = f(lstOpenCoords, newRand)
 
@@ -84,7 +90,7 @@ object Konane:
       val (newBoard, newLstOpenCoords) = play(board, player, coordFrom, coordTo, lstOpenCoords)
 
       newBoard match
-        case None => (None, newRand2,lstOpenCoords, None)
+        case None => (None, newRand2, lstOpenCoords, None)
         case Some(newBoard) => (Some(newBoard), newRand2, newLstOpenCoords, Some(coordTo))
 
 
