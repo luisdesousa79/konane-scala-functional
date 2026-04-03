@@ -39,7 +39,7 @@ object Konane:
       // aqui devíamos ter uma maneira de dizer que o jogador perdeu o jogo, em vez de lançar uma excepção
       throw new Exception("não há posições para onde jogar!")
     } else
-      // caso contrário, escolhe aleatoricamente um índice da lista de coordenadas vazias
+      // caso contrário, escolhe aleatoriamente um índice da lista de coordenadas vazias
       // atenção que isto não procura posições jogáveis (Adjacentes) - isso é feito pela função play
         val (randomIndex, newRand) = rand.nextInt(lstOpenCoords.length)
         val coord = lstOpenCoords(randomIndex)
@@ -109,6 +109,8 @@ object Konane:
       val (coordFrom, newRand) = f(myCoords, r)
       
       // escolhe coordenada de destino aleatoriamente
+
+      //val validDest = lstOpenCoords.filter(x => isValidPlay(x))
       val (coordTo, newRand2) = f(lstOpenCoords, newRand)
 
       // move a peça da coordenada de origem para a de destino
