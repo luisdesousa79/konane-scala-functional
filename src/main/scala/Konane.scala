@@ -104,22 +104,36 @@ object Konane:
     if myCoords.isEmpty then (None, r, lstOpenCoords, None)
       //no caso em que há peças
     else
-    
-      val validMoves =
-      // escolhe aleatoriamente uma coordenada de origem
-      val (coordFrom, r2) = f(myCoords, r)
       
-      // escolhe coordenada de destino aleatoriamente
+      // filtra a lista de posições vazias , ficando apenas com aquelas para as quais o jogar pode jogar,
+      // numa jogada válida
+      val validDestinations = lstOpenCoords.filter(coordTo => 
+        myCoords.exists(coordFrom => 
+          isValidPlay(board, player, coordFrom, coordTo, lstOpenCoords) 
+        ) 
+      )
+      
+        
+      if validDestinations.isEmpty then
+        (None, r, lstOpenCoords, None)
+      else
+        // escolhe aleatoriamente uma das coordenadas de destino correspondentes a uma jogada válida
+        val (coordTo, r2) = f(validDestinations, r)
+      
+        // vai filtrar quais são as coodenadas das peças do jogador que podem mover-se para a posiçãod e destino,
+        // através de uma jogada válida
+        val validOrigins = myCoords.filter(coordFrom => 
+        isValidPlay(board, player, coordFrom, coordTo, lstOpenCoords))
+        
+        // escolhe as primeiras coordenadas que encontra da peça que se pode mover para o destino com uma jogada válida
+        val coordFrom = validOrigins.head
 
-      val validDest = lstOpenCoords.filter(x => isValidPlay(board, player, coordFrom, x, lstOpenCoords))
-      val (coordTo, r3) = f(lstOpenCoords, r2)
+        // move a peça da coordenada de origem para a de destino
+        val (newBoard, newLstOpenCoords) = play(board, player, coordFrom, coordTo, lstOpenCoords)
 
-      // move a peça da coordenada de origem para a de destino
-      val (newBoard, newLstOpenCoords) = play(board, player, coordFrom, coordTo, lstOpenCoords)
-
-      newBoard match
-        case None => (None, r3, lstOpenCoords, None)
-        case Some(newBoard) => (Some(newBoard), r3, newLstOpenCoords, Some(coordTo))
+        newBoard match
+          case None => (None, r2, lstOpenCoords, None)
+          case Some(newBoard) => (Some(newBoard), r2, newLstOpenCoords, Some(coordTo))
 
 
 
