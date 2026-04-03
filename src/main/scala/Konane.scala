@@ -104,21 +104,22 @@ object Konane:
     if myCoords.isEmpty then (None, r, lstOpenCoords, None)
       //no caso em que há peças
     else
-
+    
+      val validMoves =
       // escolhe aleatoriamente uma coordenada de origem
-      val (coordFrom, newRand) = f(myCoords, r)
+      val (coordFrom, r2) = f(myCoords, r)
       
       // escolhe coordenada de destino aleatoriamente
 
-      //val validDest = lstOpenCoords.filter(x => isValidPlay(x))
-      val (coordTo, newRand2) = f(lstOpenCoords, newRand)
+      val validDest = lstOpenCoords.filter(x => isValidPlay(board, player, coordFrom, x, lstOpenCoords))
+      val (coordTo, r3) = f(lstOpenCoords, r2)
 
       // move a peça da coordenada de origem para a de destino
       val (newBoard, newLstOpenCoords) = play(board, player, coordFrom, coordTo, lstOpenCoords)
 
       newBoard match
-        case None => (None, newRand2, lstOpenCoords, None)
-        case Some(newBoard) => (Some(newBoard), newRand2, newLstOpenCoords, Some(coordTo))
+        case None => (None, r3, lstOpenCoords, None)
+        case Some(newBoard) => (Some(newBoard), r3, newLstOpenCoords, Some(coordTo))
 
 
 
