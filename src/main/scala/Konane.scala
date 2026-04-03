@@ -1,12 +1,13 @@
 import scala.collection.parallel.immutable.ParMap
+import scala.annotation.tailrec
 
 trait RandomWithState {
-  def nextInt: (Int, RandomWithState)
+  def nextInt(): (Int, RandomWithState)
   def nextInt(n: Int): (Int, RandomWithState)
 }
 
 case class MyRandom(seed: Long) extends RandomWithState {
-  def nextInt: (Int, RandomWithState) = {
+  def nextInt(): (Int, RandomWithState) = {
     val newSeed = (seed * 0x5DEECE66DL + 0xBL) & 0xFFFFFFFFFFFFL
     val nextRandom = MyRandom(newSeed)
     val n = (newSeed >>> 16).toInt
@@ -43,12 +44,56 @@ object Konane:
       // atenção que isto não procura posições jogáveis (Adjacentes) - isso é feito pela função play
         val (randomIndex, newRand) = rand.nextInt(lstOpenCoords.length)
         val coord = lstOpenCoords(randomIndex)
-        (coord, newRand)
+        (coord, MyRandom(10)) //COMENT IMPortante, modifiquei aqui.
+
   }
 
   // função que inicializa o tabuleiro
-  // incompleta
-  def initBoard(n: Int) = ???
+  // incompleta , Tenho que fazer
+  def initBoard(n: Int): Board = {
+
+    @tailrec
+    def loop(row: Int, col: Int, acc: ParMap[Coord2D, Stone]): ParMap[Coord2D, Stone] =
+      (row, col) match {
+
+        // Caso de paragem, caso r já esteja superior a n significa que já preenchemos o tabuleiro
+        case (r, _) if r >= n => acc
+
+        // Próxima linha, c já é maior que n ou seja vamos para a proxima linha
+        case (r, c) if c >= n =>
+          loop(r + 1, 0, acc)
+
+        // Caso normal, basicamente vamos adicionando c(incrementando) começando com ele a 0 na chamado abaixo loop(0,0), de acordo com as nossas regras se % 2 == 0 é uma peça(preta) , se nãé outro tipo de peça(branca)
+        case (r, c) =>
+          val stone = (r + c) % 2 match { //val stone , valor que guarda de que cor é a peça que queremos
+            case 0 =>
+              //println((r, c))
+              //println("Preta")
+              Stone.Black
+
+            case _ =>
+              //println((r, c))
+              //println("Branca")
+              Stone.White
+          }
+
+          loop(r, c + 1, acc + ((r, c) -> stone)) //atribuimos mais 1 ao c ( de modo a preencher toda a linha). Acc vai ser o acumulador.
+      }
+
+    (loop(0, 0, ParMap.empty))
+
+  }
+
+  @main
+  def main(): Unit = {
+
+    val re = initBoard(5)
+    re.foreach { case ((row, col), stone) =>
+      println(s"($row,$col) -> $stone")
+    }
+
+
+  }
   
   
   // função auxiliar para determinar se uma determinada posição é uma posição jogável para uma peça dada
@@ -85,12 +130,12 @@ object Konane:
   }
   
   // função de jogada
-  // incompleta!!!
+  // incompleta!!! //tenho que fazer
   def play(board: Board, player: Stone, coordFrom: Coord2D, coordTo: Coord2D, 
            lstOpenCoords: List[Coord2D]): (Option[Board], List[Coord2D]) =
-    if (isValidPlay(board, player, coordFrom, coordTo)) then
+    //if (isValidPlay(board, player, coordFrom, coordTo)) then
       
-    else
+    //else
       (None, lstOpenCoords)
     
   def playRandomly(board: Board, r: MyRandom, player: Stone, lstOpenCoords: List[Coord2D],
