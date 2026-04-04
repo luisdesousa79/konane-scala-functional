@@ -1,12 +1,12 @@
 import scala.collection.parallel.immutable.ParMap
 
 trait RandomWithState {
-  def nextInt: (Int, RandomWithState)
+  def nextInt(): (Int, RandomWithState)
   def nextInt(n: Int): (Int, RandomWithState)
 }
 
 case class MyRandom(seed: Long) extends RandomWithState {
-  def nextInt: (Int, RandomWithState) = {
+  def nextInt(): (Int, RandomWithState) = {
     val newSeed = (seed * 0x5DEECE66DL + 0xBL) & 0xFFFFFFFFFFFFL
     val nextRandom = MyRandom(newSeed)
     val n = (newSeed >>> 16).toInt
@@ -42,8 +42,10 @@ object Konane:
       // caso contrário, escolhe aleatoriamente um índice da lista de coordenadas vazias
       // atenção que isto não procura posições jogáveis (Adjacentes) - isso é feito pela função play
         val (randomIndex, newRand) = rand.nextInt(lstOpenCoords.length)
+      
+        val newRandState = newRand.asInstanceOf[MyRandom]      
         val coord = lstOpenCoords(randomIndex)
-        (coord, newRand)
+        (coord, newRandState)
   }
 
   // função que inicializa o tabuleiro
@@ -87,11 +89,8 @@ object Konane:
   // função de jogada
   // incompleta!!!
   def play(board: Board, player: Stone, coordFrom: Coord2D, coordTo: Coord2D, 
-           lstOpenCoords: List[Coord2D]): (Option[Board], List[Coord2D]) =
-    if (isValidPlay(board, player, coordFrom, coordTo)) then
-      
-    else
-      (None, lstOpenCoords)
+           lstOpenCoords: List[Coord2D]): (Option[Board], List[Coord2D]) = ???
+
     
   def playRandomly(board: Board, r: MyRandom, player: Stone, lstOpenCoords: List[Coord2D],
                    f: (List[Coord2D], MyRandom) => (Coord2D, MyRandom)):
