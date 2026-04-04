@@ -50,10 +50,10 @@ object Konane:
 
   // função que inicializa o tabuleiro
   // incompleta , Tenho que fazer
-  def initBoard(n: Int): Board = {
+  def initBoard(n: Int, removed: List[Coord2D]): Board = {
 
     @tailrec
-    def loop(row: Int, col: Int, acc: ParMap[Coord2D, Stone]): ParMap[Coord2D, Stone] =
+    def loop(row: Int, col: Int, acc: Board): Board =
       (row, col) match {
 
         // Caso de paragem, caso r já esteja superior a n significa que já preenchemos o tabuleiro
@@ -79,18 +79,71 @@ object Konane:
 
           loop(r, c + 1, acc + ((r, c) -> stone)) //atribuimos mais 1 ao c ( de modo a preencher toda a linha). Acc vai ser o acumulador.
       }
+    val board = (loop(0, 0, ParMap.empty))
+    removed.foldLeft(board)((b, coord) => b - coord)
 
-    (loop(0, 0, ParMap.empty))
 
   }
 
+  def isValidSalto(origin: Coord2D, destination: Coord2D): Boolean = {
+    val (x1, y1) = origin //coordenadas da origem
+    val (x2, y2) = destination //coordenadas destino
+    val dx = x2 - x1 //calculo do salto
+    val dy = y2 - y1
+    //usamos a funcao já feita math.abs de modo a devolver os valores em positivo (os saltos podem ser (2,4) para (2,2) e ai iria dar (0,-2)
+    (math.abs(dx), math.abs(dy)) match
+      case (2, 0) | (0, 2) => true
+      case _ => false
+
+  }
+
+
+  def CoordIntermedio(origin: Coord2D, destination: Coord2D): Coord2D =
+    val (x1, y1) = origin //coordenadas da origem
+    val (x2, y2) = destination //coordenadas destino
+    ((x1 + x2) / 2, (y1 + y2) / 2)
+
+
+  @tailrec
+  def ListaCointains(Lista: List[Coord2D], coordenada: Coord2D): Boolean = {
+
+    Lista match {
+      case Nil => false
+      case h :: t => if h == coordenada then true
+      else
+        ListaCointains(t,coordenada)
+
+    }
+
+  }
+
+  @tailrec
+  def removeCoordenada(xs: List[Coord2D], target: Coord2D, acc: List[Coord2D] = Nil): List[Coord2D] = {
+    xs match
+      case Nil => acc.reverse
+      case h :: t =>
+        if h == target then acc.reverse ::: t
+        else removeCoordenada(t, target, h :: acc)
+  }
+
+
   @main
   def main(): Unit = {
+    val remove1 = new Coord2D(2,2)
+    val remove2 = new Coord2D(2,3)
+    val ListaPositionAbertas = List(remove1, remove2)
+    val intBoard = initBoard(5, List(remove1, remove2))
+    val coordFrom = new Coord2D(2,0)
+    val coordTo = new Coord2D(2,2)
+    val (board1, newList) = play(intBoard,Stone.Black,coordFrom, coordTo , ListaPositionAbertas)
+    println(board1)
+    println(newList)
 
-    val re = initBoard(5)
-    re.foreach { case ((row, col), stone) =>
-      println(s"($row,$col) -> $stone")
-    }
+
+//    val cor = new Coord2D(2,3)
+//    val lista_teste = List( cor , (3,4), (4,5)) :+ (4,5)
+//
+//    println(removeCoordenada(lista_teste, cor))
 
 
   }
@@ -130,14 +183,22 @@ object Konane:
   }
   
   // função de jogada
-  // incompleta!!! //tenho que fazer
-  def play(board: Board, player: Stone, coordFrom: Coord2D, coordTo: Coord2D, 
-           lstOpenCoords: List[Coord2D]): (Option[Board], List[Coord2D]) =
-    //if (isValidPlay(board, player, coordFrom, coordTo)) then
-      
-    //else
-      (None, lstOpenCoords)
-    
+  def play(board: Board, player: Stone, coordFrom: Coord2D, coordTo: Coord2D, lstOpenCoords: List[Coord2D]): (Option[Board], List[Coord2D]) = {
+
+    if !isValidSalto(coordTo, coordFrom) || !ListaCointains(lstOpenCoords, coordTo)  || !board.get(coordFrom).contains(player) then (None, lstOpenCoords)
+    else
+      val posicao = CoordIntermedio(coordTo,coordFrom)
+      val valor_na_posicao = board.get(posicao)
+      if valor_na_posicao.isEmpty || valor_na_posicao.contains(player) then
+        (None, lstOpenCoords)
+      else
+        val newboard = board - coordFrom - posicao + (coordTo -> player) // tiramos a posicao intermedia, a posicao incial e adicionamos a nova posicao á newboard
+        val newlstOpencoords = coordFrom :: posicao :: removeCoordenada(lstOpenCoords, coordTo) //remover as coordenadas livres a posicao para onde nos movemos, e adicionamos a posicao ao final da lista
+
+        (Some(newboard), newlstOpencoords)
+
+  }
+
   def playRandomly(board: Board, r: MyRandom, player: Stone, lstOpenCoords: List[Coord2D],
                    f: (List[Coord2D], MyRandom) => (Coord2D, MyRandom)):
                     (Option[Board], MyRandom, List[Coord2D], Option[Coord2D]) =
