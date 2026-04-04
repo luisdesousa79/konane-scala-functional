@@ -1,36 +1,11 @@
 import scala.collection.parallel.immutable.ParMap
 
-trait RandomWithState {
-  def nextInt(): (Int, RandomWithState)
-  def nextInt(n: Int): (Int, RandomWithState)
-}
-
-case class MyRandom(seed: Long) extends RandomWithState {
-  def nextInt(): (Int, RandomWithState) = {
-    val newSeed = (seed * 0x5DEECE66DL + 0xBL) & 0xFFFFFFFFFFFFL
-    val nextRandom = MyRandom(newSeed)
-    val n = (newSeed >>> 16).toInt
-    (n, nextRandom)
-  }
-
-  def nextInt(n: Int): (Int, RandomWithState) = {
-    val newSeed = (seed * 0x5DEECE66DL + 0xBL) & 0xFFFFFFFFFFFFL
-    val nextRandom = MyRandom(newSeed)
-    val nn = ((newSeed >>> 16).toInt) % n
-    (if (nn < 0) -nn else nn, nextRandom)
-  }
-}
-
 object Konane:
 
   type Coord2D = (Int, Int)
 
-  type Board = ParMap[Coord2D, Stone]
+  type Board = ParMap[Coord2D, Stone.stone]
 
-  enum Stone: 
-    case Black, White
-
-  
   
   // função que implementa um movimento aleatório
   def randomMove(lstOpenCoords: List[Coord2D], rand: MyRandom): (Coord2D, MyRandom) = {
@@ -41,7 +16,7 @@ object Konane:
     } else
       // caso contrário, escolhe aleatoriamente um índice da lista de coordenadas vazias
       // atenção que isto não procura posições jogáveis (Adjacentes) - isso é feito pela função play
-        val (randomIndex, newRand) = rand.nextInt(lstOpenCoords.length)
+        val (randomIndex, newRand) = rand.nextInt1(lstOpenCoords.length)
       
         val newRandState = newRand.asInstanceOf[MyRandom]      
         val coord = lstOpenCoords(randomIndex)
@@ -54,45 +29,64 @@ object Konane:
   
   
   // função auxiliar para determinar se uma determinada posição é uma posição jogável para uma peça dada
-  def isValidPlay(board: Board, player: Stone, origin: Coord2D, destination: Coord2D, lstOpenCoords: List[Coord2D]): Boolean = {
-      
-      // vai buscar as coordenadas de origem e destino
-      val (x1, y1) = origin
-      val (x2, y2) = destination
-      
-      // calcula a direcção
-      val dx = x2 - x1
-      val dy = y2 - y1
-      
-      // define um valor booleano que representa uma direcção válida de movimento
-      val validDirection  = (math.abs(dx) == 2 && dy == 0) || (math.abs(dy) == 2 && dx == 0)
+  def isValidSalto(origin: Coord2D, destination: Coord2D): Boolean = {
+    val (x1, y1) = origin //coordenadas da origem
+    val (x2, y2) = destination //coordenadas destino
+    val dx = x2 - x1 //calculo do salto
+    val dy = y2 - y1
+    //usamos a funcao já feita math.abs de modo a devolver os valores em positivo (os saltos podem ser (2,4) para (2,2) e ai iria dar (0,-2)
+    (math.abs(dx), math.abs(dy)) match
+      case (2, 0) | (0, 2) => true
+      case _ => false
 
-      if (!validDirection) then false
-      else
-        // calcula a posição intermédia sobre a qual vai saltar
-        val middle =((x1 + x2) / 2, (y1 + y2)/2)
-
-        board.get(origin) match
-          // verifica se é o player que está na posição de origem 
-          case Some(p) if p == player =>
-          // verifica se é o adversário que está na posição intermédia (que vai ser comida)
-            board.get(middle) match
-              case Some(opponent) if opponent != player =>
-                // a posição de destino tem de estar vazia, isto é, não pode estar contida no board
-                lstOpenCoords.contains(destination)
-
-              case _ => false
-
-          case _ => false
   }
-  
+
+  def ListaCointains(Lista: List[Coord2D], coordenada: Coord2D): Boolean = {
+
+    Lista match {
+      case Nil => false
+      case h :: t => if h == coordenada then true
+      else
+        ListaCointains(t, coordenada)
+
+    }
+
+  }
+
+  def removeCoordenada(xs: List[Coord2D], target: Coord2D, acc: List[Coord2D] = Nil): List[Coord2D] = {
+    xs match
+      case Nil => acc.reverse
+      case h :: t =>
+        if h == target then acc.reverse ::: t
+        else removeCoordenada(t, target, h :: acc)
+  }
+
+  def CoordIntermedio(origin: Coord2D, destination: Coord2D): Coord2D =
+    val (x1, y1) = origin //coordenadas da origem
+    val (x2, y2) = destination //coordenadas destino
+    ((x1 + x2) / 2, (y1 + y2) / 2)
+
+
   // função de jogada
   // incompleta!!!
-  def play(board: Board, player: Stone, coordFrom: Coord2D, coordTo: Coord2D, 
-           lstOpenCoords: List[Coord2D]): (Option[Board], List[Coord2D]) = ???
+  def play(board: Board, player: Stone.stone, coordFrom: Coord2D, coordTo: Coord2D, lstOpenCoords: List[Coord2D]): (Option[Board], List[Coord2D]) = {
+
+    if !isValidSalto(coordTo, coordFrom) || !ListaCointains(lstOpenCoords, coordTo)  || !board.get(coordFrom).contains(player) then (None, lstOpenCoords)
+    else
+      val posicao = CoordIntermedio(coordTo,coordFrom)
+      val valor_na_posicao = board.get(posicao)
+      if valor_na_posicao.isEmpty || valor_na_posicao.contains(player) then
+        (None, lstOpenCoords)
+      else
+        val newboard = board - coordFrom - posicao + (coordTo -> player) // tiramos a posicao intermedia, a posicao incial e adicionamos a nova posicao á newboard
+        val newlstOpencoords = coordFrom :: posicao :: removeCoordenada(lstOpenCoords, coordTo) //remover as coordenadas livres a posicao para onde nos movemos, e adicionamos a posicao ao final da lista
+
+        (Some(newboard), newlstOpencoords)
+
+  }
 
     
-  def playRandomly(board: Board, r: MyRandom, player: Stone, lstOpenCoords: List[Coord2D],
+  def playRandomly(board: Board, r: MyRandom, player: Stone.stone, lstOpenCoords: List[Coord2D],
                    f: (List[Coord2D], MyRandom) => (Coord2D, MyRandom)):
                     (Option[Board], MyRandom, List[Coord2D], Option[Coord2D]) =
 
@@ -108,7 +102,7 @@ object Konane:
       // numa jogada válida
       val validDestinations = lstOpenCoords.filter(coordTo => 
         myCoords.exists(coordFrom => 
-          isValidPlay(board, player, coordFrom, coordTo, lstOpenCoords) 
+          isValidSalto(coordFrom, coordTo) 
         ) 
       )
       
@@ -122,7 +116,7 @@ object Konane:
         // vai filtrar quais são as coodenadas das peças do jogador que podem mover-se para a posiçãod e destino,
         // através de uma jogada válida
         val validOrigins = myCoords.filter(coordFrom => 
-        isValidPlay(board, player, coordFrom, coordTo, lstOpenCoords))
+        isValidSalto(coordFrom, coordTo))
         
         // escolhe as primeiras coordenadas que encontra da peça que se pode mover para o destino com uma jogada válida
         val coordFrom = validOrigins.head
