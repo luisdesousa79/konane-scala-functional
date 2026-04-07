@@ -23,6 +23,7 @@ object Konane:
         (coord, newRandState)
   }
 
+
   // função que inicializa o tabuleiro
   // incompleta
   def initBoard(n: Int) = ???

@@ -15,9 +15,9 @@ object Tui {
       }) + auxTUI(xs)
   }
 
-  def mostrar(board: Board, rows: Int, cols: Int): Unit = {
+  def mostrar(board: Option[Board], rows: Int, cols: Int): Unit = board match {
     // Cabeçalho
-    def printHeader(col: Int): Unit = col match {
+    case Some(a)=>def printHeader(col: Int): Unit = col match {
       case c if c == cols => println()
       case c =>
         val letra = ('A' + c).toChar
@@ -28,15 +28,21 @@ object Tui {
     print("  ")
     printHeader(0)
     mostrarRec(board, rows, cols, 0)
+    case none => println("não é valido")
   }
 
-  def mostrarRec(board: Board, rows: Int, cols: Int, currentRow: Int): Unit = currentRow match {
+
+
+  def mostrarRec(board: Option[Board], rows: Int, cols: Int, currentRow: Int): Unit = currentRow match {
     case r if r == rows => ()
     case r =>
       print(String.format("%2d ", r + 1))
-      val linha = (0 until cols).map(y => board.get((r, y))).toList
-      println(auxTUI(linha))
-      mostrarRec(board, rows, cols, r + 1)
+      board match {
+        case Some(a)=>
+          val linha = (0 until cols).map(y => a.get((r, y))).toList
+          println (auxTUI(linha))
+          mostrarRec (board, rows, cols, r + 1)
+      }
   }
 
 }

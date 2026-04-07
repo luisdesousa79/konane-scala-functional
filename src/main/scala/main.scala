@@ -1,5 +1,6 @@
-import Konane.{Board, Coord2D}
-import Stone.{Black, White, Empty}
+import Konane.{Board, Coord2D, play}
+import Stone.{Black, Empty, White}
+
 import scala.collection.parallel.immutable.ParMap
 
 object Main extends App {
@@ -8,13 +9,15 @@ object Main extends App {
   val board: Board = ParMap(
     (0, 0) -> Black, (1, 0) -> White, (2, 0) -> Black,
     (0, 1) -> White, (1, 1) -> Black, (2, 1) -> White,
-    (0, 2) -> Black, (1, 2) -> White, (2, 2) -> Empty
+
   )
 
-  val lstOpenCoords: List[Coord2D] = List((2, 2))
+  val lstOpenCoords: List[Coord2D] = List((2, 2),(2,0))
 
   println("Tabuleiro:")
-  Tui.mostrar(board, 3, 3)
+  Tui.mostrar(Some(board), 3, 3)
+
+
   println(s"Posições livres: $lstOpenCoords")
 
   val rand = MyRandom(42L) // seed fixa para teste previsível
@@ -25,9 +28,15 @@ object Main extends App {
     case (Some(newBoard), newRand, newLstOpen, Some(move)) =>
       println(s"\nJogada para: $move")
       println("Novo tabuleiro:")
-      Tui.mostrar(newBoard, 3, 3)
+      Tui.mostrar(Some(newBoard), 3, 3)
 
     case (None, _, _, None) =>
       println("\nSem jogadas válidas!")
+  }
+
+  val a = Konane.play(board,Stone.Black,(0,0),(2,0),lstOpenCoords)
+  a match{
+    case (Some(a),p)=>
+      Tui.mostrar(Some(a),3,3)
   }
 }
