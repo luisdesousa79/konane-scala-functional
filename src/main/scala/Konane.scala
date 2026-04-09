@@ -48,8 +48,28 @@ object Konane:
 
   }
 
+//Nelssy
+  // função de jogada
+  //Feita por Nelssy.
+  def play(board: Board, player: Stone, coordFrom: Coord2D, coordTo: Coord2D, lstOpenCoords: List[Coord2D]): (Option[Board], List[Coord2D]) = {
+
+    if !isValidSalto(coordTo, coordFrom) || !ListaCointains(lstOpenCoords, coordTo) || !board.get(coordFrom).contains(player) then (None, lstOpenCoords)
+    else
+      val posicao = CoordIntermedio(coordTo, coordFrom)
+      val valor_na_posicao = board.get(posicao)
+      if valor_na_posicao.isEmpty || valor_na_posicao.contains(player) then
+        (None, lstOpenCoords)
+      else
+        val newboard = board - coordFrom - posicao + (coordTo -> player) // tiramos a posicao intermedia, a posicao incial e adicionamos a nova posicao á newboard
+        val newlstOpencoords = coordFrom :: posicao :: removeCoordenada(lstOpenCoords, coordTo) //remover as coordenadas livres a posicao para onde nos movemos, e adicionamos a posicao ao final da lista
+
+        (Some(newboard), newlstOpencoords)
+
+  }
+  //Fim funcao Play
+
   // função que inicializa o tabuleiro
-  // incompleta , Tenho que fazer
+  // Feita por Nelssy:
   def initBoard(n: Int, removed: List[Coord2D]): Board = {
 
     @tailrec
@@ -84,7 +104,7 @@ object Konane:
 
 
   }
-
+  //Funcao feita pelo Nelssy
   def isValidSalto(origin: Coord2D, destination: Coord2D): Boolean = {
     val (x1, y1) = origin //coordenadas da origem
     val (x2, y2) = destination //coordenadas destino
@@ -97,13 +117,13 @@ object Konane:
 
   }
 
-
+  //funcao feita por: Nelssy
   def CoordIntermedio(origin: Coord2D, destination: Coord2D): Coord2D =
     val (x1, y1) = origin //coordenadas da origem
     val (x2, y2) = destination //coordenadas destino
     ((x1 + x2) / 2, (y1 + y2) / 2)
 
-
+  //feita por Nelssy
   @tailrec
   def ListaCointains(Lista: List[Coord2D], coordenada: Coord2D): Boolean = {
 
@@ -117,6 +137,8 @@ object Konane:
 
   }
 
+
+  //Funcao feita: Nelssy
   @tailrec
   def removeCoordenada(xs: List[Coord2D], target: Coord2D, acc: List[Coord2D] = Nil): List[Coord2D] = {
     xs match
@@ -147,8 +169,8 @@ object Konane:
 
 
   }
-  
-  
+
+// FIM : Nelssy
   // função auxiliar para determinar se uma determinada posição é uma posição jogável para uma peça dada
   def isValidPlay(board: Board, player: Stone, origin: Coord2D, destination: Coord2D, lstOpenCoords: List[Coord2D]): Boolean = {
       
@@ -182,22 +204,7 @@ object Konane:
           case _ => false
   }
   
-  // função de jogada
-  def play(board: Board, player: Stone, coordFrom: Coord2D, coordTo: Coord2D, lstOpenCoords: List[Coord2D]): (Option[Board], List[Coord2D]) = {
 
-    if !isValidSalto(coordTo, coordFrom) || !ListaCointains(lstOpenCoords, coordTo)  || !board.get(coordFrom).contains(player) then (None, lstOpenCoords)
-    else
-      val posicao = CoordIntermedio(coordTo,coordFrom)
-      val valor_na_posicao = board.get(posicao)
-      if valor_na_posicao.isEmpty || valor_na_posicao.contains(player) then
-        (None, lstOpenCoords)
-      else
-        val newboard = board - coordFrom - posicao + (coordTo -> player) // tiramos a posicao intermedia, a posicao incial e adicionamos a nova posicao á newboard
-        val newlstOpencoords = coordFrom :: posicao :: removeCoordenada(lstOpenCoords, coordTo) //remover as coordenadas livres a posicao para onde nos movemos, e adicionamos a posicao ao final da lista
-
-        (Some(newboard), newlstOpencoords)
-
-  }
 
   def playRandomly(board: Board, r: MyRandom, player: Stone, lstOpenCoords: List[Coord2D],
                    f: (List[Coord2D], MyRandom) => (Coord2D, MyRandom)):
