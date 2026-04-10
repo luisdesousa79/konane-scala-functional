@@ -26,7 +26,39 @@ object Konane:
 
   // função que inicializa o tabuleiro
   // incompleta
-  def initBoard(n: Int) = ???
+  def initBoard(n: Int, removed: List[Coord2D]): Board = {
+
+    def loop(row: Int, col: Int, acc: Board): Board =
+      (row, col) match {
+
+        // Caso de paragem, caso r já esteja superior a n significa que já preenchemos o tabuleiro
+        case (r, _) if r >= n => acc
+
+        // Próxima linha, c já é maior que n ou seja vamos para a proxima linha
+        case (r, c) if c >= n =>
+          loop(r + 1, 0, acc)
+
+        // Caso normal, basicamente vamos adicionando c(incrementando) começando com ele a 0 na chamado abaixo loop(0,0), de acordo com as nossas regras se % 2 == 0 é uma peça(preta) , se nãé outro tipo de peça(branca)
+        case (r, c) =>
+          val stone = (r + c) % 2 match { //val stone , valor que guarda de que cor é a peça que queremos
+            case 0 =>
+              //println((r, c))
+              //println("Preta")
+              Stone.Black
+
+            case _ =>
+              //println((r, c))
+              //println("Branca")
+              Stone.White
+          }
+
+          loop(r, c + 1, acc + ((r, c) -> stone)) //atribuimos mais 1 ao c ( de modo a preencher toda a linha). Acc vai ser o acumulador.
+      }
+    val board = (loop(0, 0, ParMap.empty))
+    removed.foldLeft(board)((b, coord) => b - coord)
+
+
+  }
   
   
   // função auxiliar para determinar se uma determinada posição é uma posição jogável para uma peça dada
