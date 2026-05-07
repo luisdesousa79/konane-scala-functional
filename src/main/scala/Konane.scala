@@ -247,14 +247,31 @@ object Konane:
   }
 
 // T5 implementar o método responsável por verificar se o computador ou o jogador
-//ganhou o jogo.
-  
+// ganhou o jogo.
+
   def hasValidMove(board: Board, player: Stone, lstOpenCoords: List[Coord2D]) : Boolean = {
-    
+    // faz uma lista de coordenadas onde estão posicionadas as peças do jogador que está a jogar
+    val myCoords = board.toList
+      .filter(x => x._2 == player)
+      .map(x => x._1)
+
+    // se não há peças, não tem jogadas para fazer
+    if myCoords.isEmpty then false
+    else
+      // filtra a lista de posições vazias, ficando apenas com aquelas para as quais o jogar pode jogar,
+      // numa jogada válida
+      val validDestinations = lstOpenCoords.filter(coordTo =>
+        myCoords.exists(coordFrom =>
+          isValidPlay(board, player, coordFrom, coordTo, lstOpenCoords)
+        )
+      )
+
+      // se não tem posições de destino válidas, não tem jogadas válidas
+      !validDestinations.isEmpty
   }
-  
-  def isGameOver(board: Board, player: Stone): Boolean = {
-    
+
+  def isGameOver(board: Board, player: Stone, lstOpenCoords: List[Coord2D]): Boolean = {
+    !hasValidMove(board, player, lstOpenCoords)
   }
 
 
