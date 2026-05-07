@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ScalaCompilerConfiguration">
+    <option name="separateProdTestSources" value="true" />
+    <profile name="sbt 1" modules="JG2_LuisSousa129329_MarceloOliveira111874_NelssyPina123572,JG2_LuisSousa129329_MarceloOliveira111874_NelssyPina123572.main,JG2_LuisSousa129329_MarceloOliveira111874_NelssyPina123572.test" />
+  </component>
+</project>
