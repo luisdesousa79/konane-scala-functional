@@ -13,26 +13,21 @@ object Konane:
     case Black, White
 
 
-  //T1
+  // T1
   // função que implementa um movimento aleatório
   def randomMove(lstOpenCoords: List[Coord2D], rand: MyRandom): (Coord2D, MyRandom) = {
-    // se não há coordenadas para onde jogar lança excepção
-    if(lstOpenCoords.isEmpty) {
-      // aqui devíamos ter uma maneira de dizer que o jogador perdeu o jogo, em vez de lançar uma excepção
-      throw new Exception("não há posições para onde jogar!")
-    } else
-      // caso contrário, escolhe aleatoriamente um índice da lista de coordenadas vazias
-      // atenção que isto não procura posições jogáveis (Adjacentes) - isso é feito pela função play
-      val (randomIndex, newRand) = rand.nextInt(lstOpenCoords.length)
+    // escolhe aleatoriamente um índice da lista de coordenadas vazias
+    // atenção que isto não procura posições jogáveis (Adjacentes) - isso é feito pela função play
+    val (randomIndex, newRand) = rand.nextInt(lstOpenCoords.length)
 
-      // guarda o novo gerador de números aleatórios
-      val newRandState = newRand.asInstanceOf[MyRandom]
+    // guarda o novo gerador de números aleatórios
+    val newRandState = newRand.asInstanceOf[MyRandom]
 
-      // guarda a coordenada que corresponde ao índice aleatório escolhido
-      val coord = lstOpenCoords(randomIndex)
+    // guarda a coordenada que corresponde ao índice aleatório escolhido
+    val coord = lstOpenCoords(randomIndex)
 
-      //devolve coordenada e
-      (coord, newRandState)
+    //devolve coordenada e
+    (coord, newRandState)
   }
 
 
@@ -244,13 +239,23 @@ object Konane:
 
     @tailrec
     def loop(row: Int): Unit =
-      if row < size then //aqui percorremos linha a linha, as outras funçoes vao percorrer coluna a coluna.
+      if row < size then //aqui percorremos linha a linha, as outras funções vao percorrer coluna a coluna.
         printRow(board, row, size)
         loop(row + 1)
 
     loop(0)
   }
 
+// T5 implementar o método responsável por verificar se o computador ou o jogador
+//ganhou o jogo.
+  
+  def hasValidMove(board: Board, player: Stone, lstOpenCoords: List[Coord2D]) : Boolean = {
+    
+  }
+  
+  def isGameOver(board: Board, player: Stone): Boolean = {
+    
+  }
 
 
 
