@@ -11,6 +11,10 @@ object Konane:
 
   enum Stone:
     case Black, White
+    
+  type GameState = (Board, List[Coord2D], Stone)
+  
+  type GameHistory = List[GameState]
 
 
   // T1
@@ -274,6 +278,16 @@ object Konane:
     !hasValidMove(board, player, lstOpenCoords)
   }
 
+  // T6 adicionar um temporizador limite (configurável no início do jogo) para cada
+  // jogada e, permitir que seja possível após cada jogada realizar undo, i.e., anular a
+  // última movimentação do jogador e do computador
+  def undoMove(): Unit = {
+
+  }
+
+  def isTimeExceeded(timeLimit: ): Boolean = {
+
+  }
 
 
 
