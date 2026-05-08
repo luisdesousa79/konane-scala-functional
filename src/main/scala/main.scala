@@ -3,6 +3,7 @@ def main(): Unit = {
 
   import Konane.*
   import scala.collection.parallel.immutable.ParMap
+  import TUI.*
 
   // função random (T1)
   val f = randomMove
