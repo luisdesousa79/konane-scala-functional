@@ -12,7 +12,7 @@ object Konane:
   enum Stone:
     case Black, White
     
-  type GameState = (Board, List[Coord2D], Stone)
+  type GameState = (Board, Stone, List[Coord2D])
   
   type GameHistory = List[GameState]
 
@@ -65,6 +65,8 @@ object Konane:
     val board = (loop(0, 0, ParMap.empty))
     removed.foldLeft(board)((b, coord) => b - coord)
   }
+
+  
 
   // função de jogada
   def play(board: Board, player: Stone, coordFrom: Coord2D, coordTo: Coord2D, lstOpenCoords: List[Coord2D]): (Option[Board], List[Coord2D]) = {
@@ -183,7 +185,7 @@ object Konane:
 
     loop(lstOpenCoords, Nil)
   }
-  
+
   def playRandomly(board: Board, r: MyRandom, player: Stone, lstOpenCoords: List[Coord2D], f: (List[Coord2D], MyRandom) => (Coord2D, MyRandom)): (Option[Board], MyRandom, List[Coord2D], Option[Coord2D]) = {
 
     // faz uma lista de coordenadas onde estão posicionadas as peças do jogador que está a jogar
@@ -223,8 +225,8 @@ object Konane:
 
 // T5 implementar o método responsável por verificar se o computador ou o jogador
 // ganhou o jogo
-  
-  
+
+
   def hasValidMove(board: Board, player: Stone, lstOpenCoords: List[Coord2D]) : Boolean = {
     // faz uma lista de coordenadas onde estão posicionadas as peças do jogador que está a jogar
     val myCoords = listPlayerCoords(board, player)
@@ -248,13 +250,135 @@ object Konane:
   // T6 adicionar um temporizador limite (configurável no início do jogo) para cada
   // jogada e, permitir que seja possível após cada jogada realizar undo, i.e., anular a
   // última movimentação do jogador e do computador
-  def undoMove(): Unit = {
-
+  def undoMove(history: GameHistory): Option[(GameState, GameHistory)] = {
+    history match {
+      case Nil => None
+      case lastState :: tail => Some((lastState, tail))
+    }
   }
 
-  def isTimeExceeded(timeLimit: ): Boolean = {
-
+  def isTimeExceeded(startTime: Long, timeLimit: Long): Boolean = {
+    val currentTime = System.currentTimeMillis()
+    currentTime - startTime > timeLimit
+  }
+  //T7
+  // Função para salvar estado atual (pode ser usada antes de jogadas importantes)
+  // Função para salvar o estado atual do jogo no histórico
+  // Recebe o estado atual e o histórico existente
+  // Retorna um novo histórico com o estado atual adicionado no início
+  def salvarEstadoAtual(estado: GameState, history: GameHistory): GameHistory = {
+    estado :: history // Adiciona o estado atual à frente da lista
   }
 
+  // Função para reiniciar o jogo
+  // Recebe o histórico de estados
+  // Retorna o estado mais antigo (primeiro estado do jogo)
+  def reiniciar(history: GameHistory): Option[GameState] = {
+    history.lastOption // lastOption pega o último elemento da lista (o mais antigo)
+  }
+
+  // Função que escolhe a dificuldade do jogo
+  // dificuldade: 1 = Fácil (aleatório), 2 = Normal (prioriza centro)
+  def jogarComDificuldade(
+                           dificuldade: Int, // Nível de dificuldade escolhido
+                           board: Board, // Tabuleiro atual
+                           rand: MyRandom, // Gerador aleatório
+                           player: Stone, // Jogador atual (Preto ou Branco)
+                           lstOpenCoords: List[Coord2D] // Posições vazias
+                         ): (Option[Board], MyRandom, List[Coord2D], Option[Coord2D]) = {
+
+    dificuldade match {
+      case 1 => // Fácil - jogada completamente aleatória
+        Konane.playRandomly(board, rand, player, lstOpenCoords, Konane.randomMove)
+
+      case 2 => // Normal - prioriza jogadas que vão para o centro
+        Konane.jogadaNormal(board, rand, player, lstOpenCoords)
+
+      case _ => // Padrão: fácil
+        Konane.playRandomly(board, rand, player, lstOpenCoords, Konane.randomMove)
+    }
+  }
+
+  // Função para jogada normal (prioriza o centro do tabuleiro)
+  def jogadaNormal(
+                    board: Board, // Tabuleiro atual
+                    rand: MyRandom, // Gerador aleatório
+                    player: Stone, // Jogador atual
+                    lstOpenCoords: List[Coord2D] // Posições vazias
+                  ): (Option[Board], MyRandom, List[Coord2D], Option[Coord2D]) = {
+
+    // Lista de destinos válidos para o jogador
+    val validDestinations = listValidDestinations(board, player, lstOpenCoords)
+
+    // Se não há destinos, retorna None (não pode jogar)
+    if (validDestinations.isEmpty) {
+      return (None, rand, lstOpenCoords, None)
+    }
+
+    // Calcula o centro do tabuleiro
+    val size = boardSize(board)
+    val centro = (size / 2, size / 2)
+
+    // Escolhe o destino mais próximo do centro
+    val melhorDestino = validDestinations.minBy { case (x, y) =>
+      math.abs(x - centro._1) + math.abs(y - centro._2) // Distância Manhattan
+    }
+
+    // Lista de coordenadas das peças do jogador
+    val myCoords = listPlayerCoords(board, player)
+
+    // Encontra a peça que pode se mover para o melhor destino
+    val origem = myCoords.find(coordFrom =>
+      isValidPlay(board, player, coordFrom, melhorDestino, lstOpenCoords)
+    ).get
+
+    // Executa a jogada
+    val (newBoard, newOpen) = play(board, player, origem, melhorDestino, lstOpenCoords)
+
+    // Retorna o novo tabuleiro e as novas posições vazias
+    newBoard match {
+      case Some(b) => (Some(b), rand, newOpen, Some(melhorDestino))
+      case None => (None, rand, lstOpenCoords, None)
+    }
+  }
+
+  // Função que calcula todas as posições vazias do tabuleiro
+  // board: tabuleiro atual
+  // n: tamanho do tabuleiro (número de linhas/colunas)
+  def calcularPosicoesVazias(board: Board, n: Int): List[Coord2D] = {
+
+    // Função recursiva que percorre todas as coordenadas
+    @annotation.tailrec
+    def loop(i: Int, j: Int, acc: List[Coord2D]): List[Coord2D] = {
+      (i, j) match {
+        case (i, _) if i >= n => acc // Terminou todas as linhas
+        case (i, j) if j >= n => loop(i + 1, 0, acc) // Passa para próxima linha
+        case (i, j) =>
+          val coord = (i, j)
+          // Verifica se a coordenada está vazia (não contém pedra)
+          board.get(coord) match {
+            case None => loop(i, j + 1, coord :: acc) // Vazia: adiciona à lista
+            case Some(_) => loop(i, j + 1, acc) // Ocupada: não adiciona
+          }
+      }
+    }
+
+    loop(0, 0, List())
+  }
+
+  // Função que calcula o tamanho do tabuleiro (assumindo que é quadrado)
+  def boardSize(board: Board): Int = {
+    // foldLeft percorre todas as posições do tabuleiro
+    // Começa com (0,0) e vai atualizando os máximos
+    val (maxR, maxC) = board.foldLeft((0, 0)) {
+      // Para cada posição ((r,c), _), atualiza os máximos
+      case ((maxR, maxC), ((r, c), _)) => (math.max(maxR, r), math.max(maxC, c))
+    }
+    // O tamanho é o maior valor + 1 (porque as coordenadas começam em 0)
+    math.max(maxR, maxC) + 1
+  }
+
+
+  
 
 
