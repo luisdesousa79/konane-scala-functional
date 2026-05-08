@@ -107,7 +107,6 @@ object Konane:
       case h :: t => if h == coordenada then true
       else
         listContains(t, coordenada)
-
     }
 
   }
@@ -150,17 +149,45 @@ object Konane:
 
   //T3
 
-  def playerCoords(board: Board, player: Stone): List[Coord2D] = {
-    // transforma o board numa list, filtra pelas posições do jogador 
+  def listPlayerCoords(board: Board, player: Stone): List[Coord2D] = {
+    // transforma o board numa list, filtra pelas posições do jogador
     // e devolve a lista de coordenadas do jogador
     board.toList.filter(x => x._2 == player)
       .map(x => x._1)
+  }
+
+
+  // esta função verifica se um determinado destino é uma posição jogável para alguma das posições do jogador
+  def canPlayTo(board: Board, player: Stone, myCoords: List[Coord2D], coordTo: Coord2D, lstOpenCoords: List[Coord2D]): Boolean = {
+    myCoords match
+      case Nil => false
+      case coordFrom :: tail =>
+        if isValidPlay(board, player, coordFrom, coordTo, lstOpenCoords) then true
+        else canPlayTo(board, player, tail, coordTo, lstOpenCoords)
+  }
+
+  // esta função constrói uma lista de posições jogáveis para as peças do jogador.
+  def listValidDestinations(board: Board, player: Stone, lstOpenCoords: List[Coord2D]): List[Coord2D] = {
+    val myCoords = listPlayerCoords(board, player)
+
+    @tailrec
+    def loop(remaining: List[Coord2D], acc: List[Coord2D]): List[Coord2D] = {
+      remaining match {
+        case Nil => acc.reverse
+        case coordTo :: tail =>
+          if canPlayTo(board, player, myCoords, coordTo, lstOpenCoords) then
+            loop(tail, coordTo :: acc)
+          else loop(tail, acc)
+      }
+    }
+
+    loop(lstOpenCoords, Nil)
   }
   
   def playRandomly(board: Board, r: MyRandom, player: Stone, lstOpenCoords: List[Coord2D], f: (List[Coord2D], MyRandom) => (Coord2D, MyRandom)): (Option[Board], MyRandom, List[Coord2D], Option[Coord2D]) = {
 
     // faz uma lista de coordenadas onde estão posicionadas as peças do jogador que está a jogar
-    val myCoords = playerCoords(board, player)
+    val myCoords = listPlayerCoords(board, player)
 
     // se não há peças, não faz nada
     if myCoords.isEmpty then (None, r, lstOpenCoords, None)
@@ -169,11 +196,7 @@ object Konane:
 
       // filtra a lista de posições vazias , ficando apenas com aquelas para as quais o jogar pode jogar,
       // numa jogada válida
-      val validDestinations = lstOpenCoords.filter(coordTo =>
-        myCoords.exists(coordFrom =>
-          isValidPlay(board, player, coordFrom, coordTo, lstOpenCoords)
-        )
-      )
+      val validDestinations = listValidDestinations(board, player, lstOpenCoords)
 
       if validDestinations.isEmpty then
         (None, r, lstOpenCoords, None)
@@ -196,32 +219,22 @@ object Konane:
           case None => (None, r2, lstOpenCoords, None)
           case Some(newBoard) => (Some(newBoard), r2, newLstOpenCoords, Some(coordTo))
   }
-  
+
 
 // T5 implementar o método responsável por verificar se o computador ou o jogador
-// ganhou o jogo.
+// ganhou o jogo
   
-  
-  
-  def isValidDestination(board: Board, player: Stone, lstOpenCoords: List[Coord2D]): Boolean = {
-    val myCoords = playerCoords(board, player)
-    
-  }
   
   def hasValidMove(board: Board, player: Stone, lstOpenCoords: List[Coord2D]) : Boolean = {
     // faz uma lista de coordenadas onde estão posicionadas as peças do jogador que está a jogar
-    val myCoords = playerCoords(board, player)
+    val myCoords = listPlayerCoords(board, player)
 
     // se não há peças, não tem jogadas para fazer
     if myCoords.isEmpty then false
     else
       // filtra a lista de posições vazias, ficando apenas com aquelas para as quais o jogar pode jogar,
       // numa jogada válida
-      val validDestinations = lstOpenCoords.filter(coordTo =>
-        myCoords.exists(coordFrom =>
-          isValidPlay(board, player, coordFrom, coordTo, lstOpenCoords)
-        )
-      )
+      val validDestinations = listValidDestinations(board, player, lstOpenCoords)
 
       // se não tem posições de destino válidas, não tem jogadas válidas
       !validDestinations.isEmpty
