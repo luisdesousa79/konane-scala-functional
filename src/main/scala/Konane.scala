@@ -204,6 +204,7 @@ object Konane:
   
   
   def isValidDestination(board: Board, player: Stone, lstOpenCoords: List[Coord2D]): Boolean = {
+    val myCoords = playerCoords(board, player)
     
   }
   
