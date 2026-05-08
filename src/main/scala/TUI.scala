@@ -5,7 +5,7 @@ import scala.annotation.tailrec
 
 import Konane.*
 
-class TUI {
+object TUI {
   //T4
   // Converte Stone para Char
   def stoneToChar(stone: Stone): Char = stone match {

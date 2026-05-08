@@ -12,7 +12,7 @@ object Konane:
   enum Stone:
     case Black, White
     
-  type GameState = (Board, List[Coord2D], Stone)
+  type GameState = (Board, Stone, List[Coord2D])
   
   type GameHistory = List[GameState]
 
@@ -183,7 +183,7 @@ object Konane:
 
     loop(lstOpenCoords, Nil)
   }
-  
+
   def playRandomly(board: Board, r: MyRandom, player: Stone, lstOpenCoords: List[Coord2D], f: (List[Coord2D], MyRandom) => (Coord2D, MyRandom)): (Option[Board], MyRandom, List[Coord2D], Option[Coord2D]) = {
 
     // faz uma lista de coordenadas onde estão posicionadas as peças do jogador que está a jogar
@@ -223,8 +223,8 @@ object Konane:
 
 // T5 implementar o método responsável por verificar se o computador ou o jogador
 // ganhou o jogo
-  
-  
+
+
   def hasValidMove(board: Board, player: Stone, lstOpenCoords: List[Coord2D]) : Boolean = {
     // faz uma lista de coordenadas onde estão posicionadas as peças do jogador que está a jogar
     val myCoords = listPlayerCoords(board, player)
@@ -248,12 +248,16 @@ object Konane:
   // T6 adicionar um temporizador limite (configurável no início do jogo) para cada
   // jogada e, permitir que seja possível após cada jogada realizar undo, i.e., anular a
   // última movimentação do jogador e do computador
-  def undoMove(): Unit = {
-
+  def undoMove(history: GameHistory): Option[(GameState, GameHistory)] = {
+    history match {
+      case Nil => None
+      case lastState :: tail => Some((lastState, tail))
+    }
   }
 
-  def isTimeExceeded(timeLimit: ): Boolean = {
-
+  def isTimeExceeded(startTime: Long, timeLimit: Long): Boolean = {
+    val currentTime = System.currentTimeMillis()
+    currentTime - startTime > timeLimit
   }
 
 
