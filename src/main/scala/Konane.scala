@@ -151,6 +151,8 @@ object Konane:
   //T3
 
   def playerCoords(board: Board, player: Stone): List[Coord2D] = {
+    // transforma o board numa list, filtra pelas posições do jogador 
+    // e devolve a lista de coordenadas do jogador
     board.toList.filter(x => x._2 == player)
       .map(x => x._1)
   }
@@ -225,6 +227,7 @@ object Konane:
   }
 
   def isGameOver(board: Board, player: Stone, lstOpenCoords: List[Coord2D]): Boolean = {
+    // se o jogador já não tem jogadas válidas para fazer, é Game Over
     !hasValidMove(board, player, lstOpenCoords)
   }
 
