@@ -143,6 +143,13 @@ object GameEngine:
       case Stone.Black => Stone.White
       case Stone.White => Stone.Black
 
+  def showGameOption(): Unit = {
+    println("1 -> Jogar")
+    println("2 -> Undo") //Susceptivel a alterações, só faz sentido ter undo no caso do jogo já estar a rodar.
+    println("3 -> Reiniciar")
+    println("4 -> Sair")
+  }
+
 
   //@tailrec
 
@@ -151,10 +158,46 @@ object GameEngine:
 
     println("Bora para o Jogo!")
 
+    printBoard(state._1) //Print da Board
 
-    //Fluxo de jogo em teoria:
+    //Aqui basicamente vamos ver se alguem já ganhou. De acordo com o stone Atual.
+    if isGameOver(state._1,state._2,state._3) then
+      val winner = switchPlayer(state._2)
+      println("Game Over!!!!!!!!!")
+      println(s"Jogador $winner ganhou")
+      showMenu()
+    else
+      showGameOption()
 
-
+      getUserInputInt match
+        case 1 => //Aqui vai depender do tipo de jogo!
+          val timeInit = System.currentTimeMillis()
+          val newState = mode match
+            case GameMode.PvP =>
+              print("Jogo Player vs Player")
+              //Vamos ter uma funcao para este tipo de jogo
+            case GameMode.PvC =>
+              print("Jogo Player vs Computer")
+              //Vamos ter uma funcao para este tipo de jogo
+            case GameMode.CvC =>
+              println("Computer vs Computer")
+              //Vamos ter uma funcao para este tipo de jogo
+        case 2 =>
+          undoMove(history) match
+            case Some((estadoAnrigo, restoHistoria)) =>
+              println("Undo realizado!")
+              gameLoop(estadoAnrigo, restoHistoria, timerLimit, mode)
+            case None =>
+              println("Sem jogadas para desfazer!")
+              gameLoop(state, history, timerLimit, mode)
+        case 3 =>
+          val (newState, newTimer, newMode) = setupOfGame
+          gameLoop(newState,Nil ,newTimer, newMode)
+        case 4 =>
+          println("A sair...")
+        case _ =>
+          println("Opção Inválida ")
+          gameLoop(state,history,timerLimit, mode)
 
 
   }
