@@ -157,6 +157,7 @@ object Konane:
 
 
   // esta função verifica se um determinado destino é uma posição jogável para alguma das posições do jogador
+  @tailrec
   def canPlayTo(board: Board, player: Stone, myCoords: List[Coord2D], coordTo: Coord2D, lstOpenCoords: List[Coord2D]): Boolean = {
     myCoords match
       case Nil => false
@@ -165,39 +166,45 @@ object Konane:
         else canPlayTo(board, player, tail, coordTo, lstOpenCoords)
   }
 
-  def listPlayablePieces(board: Board, player: Stone, lstOpenCoords: List[Coord2D]): List[Coord2D] = {
-    val myCoords = listPlayerCoords(board, player) //Lista com as posições atuais do jogador
+
+  //Aqui vamos devolver a lista de posições que podemos usar para jogar de acordo com a stone atual
+  def listPlayablePositions(board: Board, player: Stone, lstOpenCoords: List[Coord2D]): List[Coord2D] = {
+    val myCoords = listPlayerCoords(board, player) //nossas coordenadas no tabuleiro
 
     @tailrec
-    def loop(remaining: List[Coord2D], acc: List[Coord2D]): List[Coord2D] =
-
+    def loop(remaining: List[Coord2D], acc: List[Coord2D]): List[Coord2D] = {
+      // remaining -> nossas posições no tabuleiro
       remaining match
-        case Nil =>
-          acc.reverse
-        case coordFrom :: tail => val hasMove = lstOpenCoords.exists(coordTo => play(board, player, coordFrom, coordTo, lstOpenCoords)._1.isDefined)
+        case Nil =>  acc.reverse //retornamos o acumulador(resultado)
+        case coordFrom :: tail =>
+          val hasMove = lstOpenCoords.exists(coordTo => play(board, player, coordFrom, coordTo, lstOpenCoords)._1.isDefined) //IMPORTANTE -> Perceber se podemos usar isto para o nosso projeto.
           if hasMove then
-            loop(tail, coordFrom :: acc)
+            loop(tail, coordFrom :: acc) //neste if basicamente encontramos uma posição jogavel, sendo assim iremos guardar esta
           else
             loop(tail, acc)
-    loop(myCoords, Nil)
+    }
+    loop(myCoords, Nil) //Começamos por passar para o loop as posições que temos no nosso tabuleiro e Nil o nosso  acumulador que irá representar o resultado
   }
+
+
 
   // esta função constrói uma lista de posições jogáveis para as peças do jogador.
   def listValidDestinations(board: Board, player: Stone, lstOpenCoords: List[Coord2D]): List[Coord2D] = {
-    val myCoords = listPlayerCoords(board, player)
+
+    val myCoords = listPlayerCoords(board, player) //Lista de Peças do jogador, de acordo com a stone
 
     @tailrec
     def loop(remaining: List[Coord2D], acc: List[Coord2D]): List[Coord2D] = {
       remaining match {
-        case Nil => acc.reverse
+        case Nil => acc.reverse //chegamos ao Fim
         case coordTo :: tail =>
           if canPlayTo(board, player, myCoords, coordTo, lstOpenCoords) then
-            loop(tail, coordTo :: acc)
-          else loop(tail, acc)
+            loop(tail, coordTo :: acc) //Este if faz com que, caso a peça atual possa ser jogada, colocar na Lista de posições jogaveis
+          else loop(tail, acc) //se não é jogavel vamos percorrer o resto da Lista
       }
     }
 
-    loop(lstOpenCoords, Nil)
+    loop(lstOpenCoords, Nil) //Passamos a Lista de posiçoes abertas -> E nil (acumulador)
   }
 
   def playRandomly(board: Board, r: MyRandom, player: Stone, lstOpenCoords: List[Coord2D], f: (List[Coord2D], MyRandom) => (Coord2D, MyRandom)): (Option[Board], MyRandom, List[Coord2D], Option[Coord2D]) = {

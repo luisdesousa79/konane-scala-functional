@@ -151,26 +151,34 @@ object GameEngine:
     println("4 -> Sair")
   }
 
+  def askPlayablePieces(validPieces: List[Coord2D]): Coord2D = {
+
+    println("Peças jogáveis:")
+
+    validPieces.zipWithIndex.foreach {
+      case (coord, index) =>
+        println(s"${index + 1} -> $coord")
+    }
+
+
+
+    validPieces.head
+  }
+
   def PlayerMove(state: GameState): GameState = {
 
     //Position Validas -> Fazer display das mesmas
-    println("Coordenada origem linha:")
-    val linha = getUserInputInt
+    val listPlayablePieces = listPlayablePositions(state._1, state._2,state._3)
 
-    println("Coordenada origem coluna:")
-    val coluna = getUserInputInt
+    val PossiveisDestion = listValidDestinations(state._1, state._2,state._3)
 
+    //Fazer Display.
 
-    //Fazer display deacordo com a posição escolhida posicoes para onde jogar. Dar possiblidade de voltar atrás e escolher outra posição.
+    //De acordo com a peça escolhida ver quais as posições para onde jogar: List , (2) -> Fazes display destas , (3) -> Jogador escolher. Opt: Jogador pode voltar atrás.
 
-    println("Coordenada destino linha:")
-    val toRow = getUserInputInt
-
-    println("Coordenada destino coluna:")
-    val toCol = getUserInputInt
 
     //Realizar jogada.
-    //Aqui vai nos ser devolvido um novo tab e um novas posicoes abertas
+    //Aqui vai nos ser devolvido um novo tab e um novas posicoes abertas , devolver novo estado.
 
     state
 
