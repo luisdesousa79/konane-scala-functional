@@ -34,37 +34,36 @@ object Konane:
     (coord, newRandState)
   }
 
+  def removePecas(board: Board, removed: List[Coord2D]): Board =
+
+    removed.foldLeft(board) {
+      case (b, coord) => b - coord}
+
 
   //T2 - Funcao Initboard e Play
-  // função que inicializa o tabuleiro
-  def initBoard(n: Int, removed: List[Coord2D]): Board = {
+  // função que inicializa o tabuleiro, de modo a podermos ter tabuleiros quadrados ou retangulares recebemos dois argumentos, a remoçao das peças é feita depois.
+  def initBoard(rows: Int, cols: Int): Board = {
 
     @tailrec
     def loop(row: Int, col: Int, acc: Board): Board =
       (row, col) match {
 
-        // Caso de paragem, caso r já esteja superior a n significa que já preenchemos o tabuleiro
-        case (r, _) if r >= n => acc
+        case (r, _) if r >= rows => acc //Caso r > ou igual rows significa que já temos o tabuleiro Completo
 
-        // Próxima linha, c já é maior que n ou seja vamos para a próxima linha
-        case (r, c) if c >= n =>
-          loop(r + 1, 0, acc)
+        
+        case (r, c) if c >= cols => loop(r + 1, 0, acc) // próxima linha ( c >= cols ) significa que já chegamos ao final da linha atual.
 
-        // Caso normal, basicamente vamos adicionando c(incrementando) começando com ele a 0 na chamado abaixo loop(0,0), de acordo com as nossas regras se % 2 == 0 é uma peça(preta) , se não, é outro tipo de peça(branca)
+        // preencher posição atual
         case (r, c) =>
-          val stone = (r + c) % 2 match { //val stone , valor que guarda de que cor é a peça que queremos
-            case 0 =>
-              Stone.Black
-
-            case _ =>
-              Stone.White
-          }
-
-          loop(r, c + 1, acc + ((r, c) -> stone)) //atribuimos mais 1 ao c ( de modo a preencher toda a linha). Acc vai ser o acumulador.
+          val stone = (r + c) % 2 match {
+              case 0 => Stone.Black
+              case _ => Stone.White
+            }
+          loop(r, c + 1, acc + ((r, c) -> stone)) //Seguir para a proxima posicao da linha.
       }
-    val board = (loop(0, 0, ParMap.empty))
-    removed.foldLeft(board)((b, coord) => b - coord)
+    loop(0, 0, ParMap.empty) //Basicamente é isto que vamos devolver
   }
+  
 
   // função de jogada
   def play(board: Board, player: Stone, coordFrom: Coord2D, coordTo: Coord2D, lstOpenCoords: List[Coord2D]): (Option[Board], List[Coord2D]) = {

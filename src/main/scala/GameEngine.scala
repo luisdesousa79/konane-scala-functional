@@ -1,5 +1,6 @@
 import Konane.*
 import TUI.*
+import  Konane.GameState
 
 import scala.annotation.tailrec
 import scala.io.StdIn.readLine
@@ -70,7 +71,31 @@ class GameEngine {
     (largura,comprimento)
   }
 
-  def SetupDefGame(): Unit = {
+  def possibleInitialRemovals(rows: Int, cols: Int): List[(Coord2D, Coord2D)] = {
+    List(((0, cols - 2), (0, cols - 1)), ((rows / 2, cols / 2 - 1), (rows / 2, cols / 2)), ((rows - 1, 0), (rows - 1, 1)))
+    //Devolvemos uma lista de conjunto de posições livres. Tendo em conta que as regras konane apenas permitem remover no meio e no canto superior direito , inferior esquerdo.
+  }
+
+  //Tail recursive Modificar
+  def choceInitPosToRemove(rows: Int, cols: Int): List[Coord2D] = {
+    val options = possibleInitialRemovals(rows, cols)
+
+    println("Escolha o conjunto de posições iniciais a remover:")
+    println(s"1 -> ${options.head}")
+    println(s"2 -> ${options(1)}")
+    println(s"3 -> ${options(2)}")
+
+    val escolha = getUserInputInt
+
+    escolha match {
+      case 1 => List(options.head._1, options.head._2)
+      case 2 => List(options(1)._1, options(1)._2)
+      case 3 => List(options(2)._1, options(2)._2)
+      case _ => println("Opção inválida.")
+        choceInitPosToRemove(rows, cols)}
+  }
+
+  def SetupDefGame(): (GameState, Long, GameMode) = {
     println("Configuarações de jogo ")
 
     //Vamos escolher aqui o modo de jogo
@@ -83,17 +108,20 @@ class GameEngine {
     val (lagura,comprimento) = choceTamanhoTab
 
     //Escolher Peças a serem removidas (as duas primeiras)
+    val removed = choceInitPosToRemove(lagura,comprimento)
 
-    //InitBoardAqui
+    //InitBoardAqui + Remover as peças Inicias Aqui
+    val board0 = removePecas(initBoard(lagura,comprimento), removed)
 
-    //Criar o GameSatete
+    //Criar o GameSatet
+    val gameSate0 = new GameState(board0,Stone.Black,removed) //Podemos Melhorar , no caso de ser PvP ou PvC a pessoa poder escolher a sua peça (Preta ou Branca)
 
     //Fazer return do Gamestate , Timer e GameMode
+    (gameSate0,timer,mode_game)
 
 
   }
   //Vamos fazer setup das condições de jogo sendo estas:  Tipo Jogo, Tamanho Tabuleiro , Peças a remover , Tempo Máximo de jogo(timer)
-
 
   def switchPlayer(player: Stone): Stone =
     player match

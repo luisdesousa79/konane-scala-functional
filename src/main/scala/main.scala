@@ -54,7 +54,8 @@ def main(): Unit = {
   val removeA = (2, 2)
   val removeB = (2, 3)
   val open0 = List(removeA, removeB)
-  val board0 = initBoard(5, open0)
+  val board0 = removePecas(initBoard(5,5), open0)
+  
 
   println("\n=== BOARD INICIAL ===")
   printBoard(board0)
