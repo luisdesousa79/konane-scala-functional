@@ -13,10 +13,13 @@ object GameEngine:
   def showMenu(): Unit = {
     print("1. Iniciar Jogo \n")
     print("2. Sair \n")
+    println("Escolha sua opção: ")
 
     getUserInputInt match
-      case 1 => setupOfGame
-      case 2 => print("A sair.")
+      case 1 =>{val (state, timer, mode) = setupOfGame
+      gameLoop(state,Nil,timer,mode) //Aqui irá começar o fluxo do jogo
+      }
+      case 2 => print("A sair...")
       case _ =>
         print("Opcão Inválida!")
         showMenu()
@@ -139,4 +142,21 @@ object GameEngine:
     player match
       case Stone.Black => Stone.White
       case Stone.White => Stone.Black
+
+
+  //@tailrec
+
+  //Aqui que o jogo vai "rodar"
+  def gameLoop(state: GameState, history: GameHistory, timerLimit: Long, mode: GameMode): Unit = {
+
+    println("Bora para o Jogo!")
+
+
+    //Fluxo de jogo em teoria:
+
+
+
+
+  }
+
 
