@@ -17,10 +17,10 @@ object GameEngine:
     getUserInputInt match
       case 1 => setupOfGame
       case 2 => print("A sair.")
-      case _ => 
+      case _ =>
         print("Opcão Inválida!")
         showMenu()
-      
+
   }
 
   @tailrec
