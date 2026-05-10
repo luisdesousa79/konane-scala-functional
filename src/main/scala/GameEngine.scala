@@ -16,9 +16,10 @@ object GameEngine:
     println("Escolha sua opção: ")
 
     getUserInputInt match
-      case 1 =>{val (state, timer, mode) = setupOfGame
-      gameLoop(state,Nil,timer,mode) //Aqui irá começar o fluxo do jogo
-      }
+      case 1 =>
+        val (state, timer, mode) = setupOfGame
+        gameLoop(state,Nil,timer,mode) //Aqui irá começar o fluxo do jogo
+
       case 2 => print("A sair...")
       case _ =>
         print("Opcão Inválida!")
@@ -150,10 +151,40 @@ object GameEngine:
     println("4 -> Sair")
   }
 
+  def PlayerMove(state: GameState): GameState = {
 
-  //@tailrec
+    //Position Validas -> Fazer display das mesmas
+    println("Coordenada origem linha:")
+    val linha = getUserInputInt
+
+    println("Coordenada origem coluna:")
+    val coluna = getUserInputInt
+
+
+    //Fazer display deacordo com a posição escolhida posicoes para onde jogar. Dar possiblidade de voltar atrás e escolher outra posição.
+
+    println("Coordenada destino linha:")
+    val toRow = getUserInputInt
+
+    println("Coordenada destino coluna:")
+    val toCol = getUserInputInt
+
+    //Realizar jogada.
+    //Aqui vai nos ser devolvido um novo tab e um novas posicoes abertas
+
+    state
+
+  }
+  def ComputerMove(state: GameState): GameState = {
+
+    print("Computador a jogar")
+
+    state
+  }
+
 
   //Aqui que o jogo vai "rodar"
+  @tailrec
   def gameLoop(state: GameState, history: GameHistory, timerLimit: Long, mode: GameMode): Unit = {
 
     println("Bora para o Jogo!")

@@ -50,7 +50,7 @@ object Konane:
 
         case (r, _) if r >= rows => acc //Caso r > ou igual rows significa que já temos o tabuleiro Completo
 
-        
+
         case (r, c) if c >= cols => loop(r + 1, 0, acc) // próxima linha ( c >= cols ) significa que já chegamos ao final da linha atual.
 
         // preencher posição atual
@@ -63,7 +63,7 @@ object Konane:
       }
     loop(0, 0, ParMap.empty) //Basicamente é isto que vamos devolver
   }
-  
+
 
   // função de jogada
   def play(board: Board, player: Stone, coordFrom: Coord2D, coordTo: Coord2D, lstOpenCoords: List[Coord2D]): (Option[Board], List[Coord2D]) = {
@@ -163,6 +163,23 @@ object Konane:
       case coordFrom :: tail =>
         if isValidPlay(board, player, coordFrom, coordTo, lstOpenCoords) then true
         else canPlayTo(board, player, tail, coordTo, lstOpenCoords)
+  }
+
+  def listPlayablePieces(board: Board, player: Stone, lstOpenCoords: List[Coord2D]): List[Coord2D] = {
+    val myCoords = listPlayerCoords(board, player) //Lista com as posições atuais do jogador
+
+    @tailrec
+    def loop(remaining: List[Coord2D], acc: List[Coord2D]): List[Coord2D] =
+
+      remaining match
+        case Nil =>
+          acc.reverse
+        case coordFrom :: tail => val hasMove = lstOpenCoords.exists(coordTo => play(board, player, coordFrom, coordTo, lstOpenCoords)._1.isDefined)
+          if hasMove then
+            loop(tail, coordFrom :: acc)
+          else
+            loop(tail, acc)
+    loop(myCoords, Nil)
   }
 
   // esta função constrói uma lista de posições jogáveis para as peças do jogador.
