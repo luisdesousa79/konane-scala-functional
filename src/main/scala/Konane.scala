@@ -1,8 +1,9 @@
+import Difficulty.{Easy, Hard, Medium}
 import com.sun.source.tree.WhileLoopTree
 
 import scala.collection.parallel.immutable.ParMap
 import scala.annotation.tailrec
-
+import GameMode. *
 object Konane:
 
   type Coord2D = (Int, Int)
@@ -15,6 +16,13 @@ object Konane:
   type GameState = (Board, Stone, List[Coord2D])
   
   type GameHistory = List[GameState]
+
+
+  def maxCaptures(diff: Difficulty): Int =
+    diff match
+      case Easy => 1
+      case Medium => 2
+      case Hard => Int.MaxValue
 
 
   // T1

@@ -1,6 +1,7 @@
+import Difficulty.{Easy, Hard, Medium}
 import Konane.*
 import TUI.*
-import  Konane.GameState
+import Konane.GameState
 
 import scala.annotation.tailrec
 import scala.io.StdIn.readLine
@@ -15,10 +16,12 @@ object GameEngine:
     print("2. Sair \n")
     println("Escolha sua opção: ")
 
+    val rand0 = MyRandom(1) //Random Inicial
+
     getUserInputInt match
       case 1 =>
-        val (state, timer, mode) = setupOfGame
-        gameLoop(state,Nil,timer,mode) //Aqui irá começar o fluxo do jogo
+        val (state, timer, mode , dificuldade) = setupOfGame
+        gameLoop(state,Nil,timer,mode, rand0 , dificuldade) //Aqui irá começar o fluxo do jogo
 
       case 2 => print("A sair...")
       case _ =>
@@ -52,6 +55,29 @@ object GameEngine:
         chooseGame
   }
 
+  @tailrec
+  def chooseDificuldade: Difficulty = {
+
+    println("De acordo com as dificuldade listada abaixo, escolha uma, de acordo com o indice")
+    println("1 -> Easy")
+    println("2 -> Medio")
+    println("3 -> Dificil")
+
+    getUserInputInt match
+      case 1 => Difficulty.Easy
+      case 2 => Difficulty.Medium
+      case 3 => Difficulty.Hard
+      case _ =>
+        println("Coloque um valor Válido!")
+        chooseDificuldade
+  }
+
+  def difficultyLimit(diff: Difficulty): Int =
+    diff match
+      case Easy => 0
+      case Medium => 1
+      case Hard => Int.MaxValue
+
 
   @tailrec
   def chooseTimer: Long = {
@@ -68,6 +94,7 @@ object GameEngine:
         chooseTimer
     }
   }
+
 
   def chooseTamanhoTab: (Int, Int) = {
 
@@ -108,7 +135,7 @@ object GameEngine:
     }
   }
 
-  def setupOfGame: (GameState, Long, GameMode) = {
+  def setupOfGame: (GameState, Long, GameMode , Difficulty) = {
     println("Configuarações de jogo ")
 
     //Vamos escolher aqui o modo de jogo
@@ -134,8 +161,12 @@ object GameEngine:
     //Criar o GameSatet
     val gameSate0 = new GameState(removePecas(boardShow, removed), Stone.Black, removed) //Podemos Melhorar , no caso de ser PvP ou PvC a pessoa poder escolher a sua peça (Preta ou Branca)
 
-    //Fazer return do Gamestate , Timer e GameMode
-    (gameSate0, timer, mode_game)
+
+
+    val dificuldade = chooseDificuldade
+
+
+    (gameSate0, timer, mode_game, dificuldade)
   }
   //Vamos fazer setup das condições de jogo sendo estas:  Tipo Jogo, Tamanho Tabuleiro , Peças a remover , Tempo Máximo de jogo(timer)
 
@@ -152,6 +183,7 @@ object GameEngine:
     println("4 -> Sair")
   }
 
+  @tailrec
   def askPieces(validPieces: List[Coord2D]): Coord2D = {
 
     println("De acordo com as Peças a seguir:")
@@ -183,7 +215,7 @@ object GameEngine:
 
     val coordFroomPiece = askPieces(listPlayablePieces) //Pegamos aqui a peça a jogar
 
-    val PossiveisDestion = listValidDestinations(state._1, state._2,state._3) //Pegamos aqui todas as casas livres
+    val PossiveisDestion = listValidDestinations(state._1, state._2,state._3) //Pegamos aqui todas as casas livres, esta função faz return das casas livres de acordo com o player
 
     val DestinoPossiveis = PossiveisDestion.filter(coordTo => isValidPlay(state._1, state._2, coordFroomPiece , coordTo, state._3)) //filtro de modo a obter apenas as casas para onde podemos jogar de acordo coma nossa peça
 
@@ -202,17 +234,67 @@ object GameEngine:
         state //Aqui se calhar poderiamos repetir a jogada...
 
   }
-  def ComputerMove(state: GameState): GameState = {
 
-    print("Computador a jogar")
 
-    state
+  def ComputerMove(state: GameState, difficulty: Difficulty, rand: MyRandom): (GameState , MyRandom)= {
+
+    val PositionCanPlay = listPlayablePositions(state._1, state._2, state._3) //Posições/Peças que podem ser usadas para jogar.
+    val (coordFrom, r2) = randomMove(PositionCanPlay, rand) //Escolha de uma peça aleatoria
+
+    val possibleDestinations = listValidDestinations(state._1, state._2, state._3) //Peças que podemos ir para lá jogar(Destinos válidos)
+
+    val validDestinations = possibleDestinations.filter(coordTo => isValidPlay(state._1, state._2, coordFrom, coordTo, state._3))//De acordo com a Peça escolhida anterioramente de forma aleatoria vemos para onde esta pode ir.
+
+    val (coordTo, r3) = randomMove(validDestinations, r2) //Escolha de destino aleatorio.
+
+    val (newBoardOpt, newOpenCoords) = play(state._1, state._2, coordFrom, coordTo, state._3) //realizar primeira jogada.
+    
+    println(s"Jogada Realizada $coordFrom -> $coordTo")
+
+    newBoardOpt match
+      case None => (state,r3) //Devolvemos o estado Atual do jogo, Ou seja não houve jogada
+
+      case Some(newBoard) =>
+        val capturesLeft = difficultyLimit(difficulty) //O maximo de Capturas que podemos fazer (ex: Para cada dificuldade iremos ter um maximo de jogadas possiveis (hard não tem)
+
+        val (finalBoard, finalOpenCoords, ryp) = continueCaptures(newBoard, state._2, coordTo, newOpenCoords, capturesLeft, r3) //Aqui fazemos multiplcas capturas
+        val newstate = (finalBoard, switchPlayer(state._2), finalOpenCoords)
+
+        (newstate, ryp)
+        //Aqui já devolvemos a final board depois de fazer as multiplas capturas.
+  }
+
+  @tailrec
+  def continueCaptures(board: Board, player: Stone, currentPos: Coord2D, openCoords: List[Coord2D], remainingCaptures: Int, rand: MyRandom): (Board, List[Coord2D], MyRandom) = {
+
+    // Se não podemos continuar capturas , remaining Captures será o "capturesLeft" presente ComputerMove
+    if remainingCaptures <= 0 then
+      (board, openCoords, rand)
+    else
+      // Todas as posições vazias possíveis -> Para onde podemos jogar (o mesmo que foi feito no ComputerMove)
+      val possibleDestinations = listValidDestinations(board, player, openCoords)
+
+      val validDestinations = possibleDestinations.filter(coordTo => isValidPlay(board, player, currentPos, coordTo, openCoords))  // Filtramos apenas destinos válidos para a peça atual
+
+      // Se não houver mais capturas possíveis
+      if validDestinations.isEmpty then
+        (board, openCoords, rand) //Devolvemos basicamente o que tinha chegado cá
+      else
+
+        val (nextCoordTo, r2) = randomMove(validDestinations, rand)// Escolhe próximo destino aleatoriamente
+        // Executa mais um salto
+        val (newBoardOpt, newOpenCoords) = play(board, player, currentPos, nextCoordTo, openCoords) // Executa mais um salto
+        println(s"Jogada Realizada na captura multipla: $currentPos -> $nextCoordTo ")
+        newBoardOpt match
+          case None => (board, openCoords, r2) //Possivel erro (jogada não realizada , devolvemos oq já tinhamos
+          case Some(newBoard) =>
+            continueCaptures(newBoard, player, nextCoordTo, newOpenCoords, remainingCaptures - 1, r2) // Continua recursivamente
   }
 
 
   //Aqui que o jogo vai "rodar"
   @tailrec
-  def gameLoop(state: GameState, history: GameHistory, timerLimit: Long, mode: GameMode): Unit = {
+  def gameLoop(state: GameState, history: GameHistory, timerLimit: Long, mode: GameMode, r: => MyRandom , diff: => Difficulty ): Unit = {
 
     println("Tabuleiro de Jogo: ")
     printBoard(state._1) //Print da Board
@@ -231,73 +313,63 @@ object GameEngine:
 
         case 1 => //Aqui vai depender do tipo de jogo!
 
-
           val timeInit = System.currentTimeMillis() //Começamos a contar o tempo
 
 
-          val newState = mode match //De acordo com o modo de jogo escolhido vamos realizar um tipo de jogada
-
+          val (newState , rp ) = mode match //De acordo com o modo de jogo escolhido vamos realizar um tipo de jogada, aqui vamos pegar o novoEstado, e o novo (caso seja preciso) Random
 
             case GameMode.PvP =>
               println("Jogo Player vs Player")
-              PlayerMove(state) //Vamos realizar a jogada //PlayerMove vai devolver o novo estado de jogo.
+              val estado = PlayerMove(state) //Vamos realizar a jogada //PlayerMove vai devolver o novo estado de jogo.
 
+              (estado,r)
 
               //Vamos ter uma funcao para este tipo de jogo
             case GameMode.PvC => //Aqui temos que ter atenção que player está associado cada peça!
               println("Jogo Player vs Computer")
-              ComputerMove(state) //OU PlayerMove(state)
+              if state._2 == Stone.Black then
+                val estado = PlayerMove(state)
+                (estado, r)
+              else
+                val (result, newR) = ComputerMove(state , diff, r)
+                (result,newR)
 
             case GameMode.CvC =>
               println("Computer vs Computer")
-              ComputerMove(state) //Aqui é sempre Computer Move.
+              val (result, newR) = ComputerMove(state , diff, r) //Aqui é sempre Computer Move.
 
-            //Tempo excedido só faz sentido para jogos player vs player ou player vs computer.
+              (result,newR)
 
-          //Calculo de tempo excedido.
-          isTimeExceeded(timeInit, timerLimit) match
-            case true => println("Aqui vamos ter de fazer uma nova jogaga")
-            case _ => println("Jogada feita a tempo")
-
+//          //Calculo de tempo excedido.
+//          isTimeExceeded(timeInit, timerLimit) match
+//            case true => println("Aqui vamos ter de fazer uma nova jogaga")
+//            case _ => println("Jogada feita a tempo")
 
           val newHistory = state :: history
-          gameLoop( newState , newHistory , timerLimit, mode)
-
-
-
+          gameLoop( newState , newHistory , timerLimit, mode, rp , diff)
 
         case 2 =>
           undoMove(history) match
             case Some((estadoAnrigo, restoHistoria)) =>
               println("Undo realizado!")
-              gameLoop(estadoAnrigo, restoHistoria, timerLimit, mode)
+              gameLoop(estadoAnrigo, restoHistoria, timerLimit, mode, r , diff)
             case None =>
               println("Sem jogadas para desfazer!")
-              gameLoop(state, history, timerLimit, mode)
+              gameLoop(state, history, timerLimit, mode, r , diff)
 
 
 
 
         case 3 =>
-          val (newState, newTimer, newMode) = setupOfGame
-          gameLoop(newState,Nil ,newTimer, newMode)
-
-
-
+          val (newState, newTimer, newMode , diff2) = setupOfGame
+          gameLoop(newState,Nil ,newTimer, newMode, r , diff2)
 
         case 4 =>
           println("A sair...")
 
-
-
-
-
-
-
-
         case _ =>
           println("Opção Inválida ")
-          gameLoop(state,history,timerLimit, mode)
+          gameLoop(state,history,timerLimit, mode , r , diff)
 
 
   }
