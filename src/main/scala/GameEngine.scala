@@ -22,7 +22,7 @@ object GameEngine:
 
       case 2 => print("A sair...")
       case _ =>
-        print("Opcão Inválida!")
+        println("Opcão Inválida!")
         showMenu()
 
   }
@@ -145,42 +145,61 @@ object GameEngine:
       case Stone.White => Stone.Black
 
   def showGameOption(): Unit = {
-    println("1 -> Jogar")
+    println("Escolha uma opção abaixo: ")
+    println("1 -> Realizar Jogada")
     println("2 -> Undo") //Susceptivel a alterações, só faz sentido ter undo no caso do jogo já estar a rodar.
     println("3 -> Reiniciar")
     println("4 -> Sair")
   }
 
-  def askPlayablePieces(validPieces: List[Coord2D]): Coord2D = {
+  def askPieces(validPieces: List[Coord2D]): Coord2D = {
 
-    println("Peças jogáveis:")
+    println("De acordo com as Peças a seguir:")
 
-    validPieces.zipWithIndex.foreach {
-      case (coord, index) =>
-        println(s"${index + 1} -> $coord")
-    }
+    validPieces.foreach((x, y) => println(s"Position: ($x , $y)"))
 
+    println("Escolha a linha da peça a jogar: ")
+    val indL = getUserInputInt
+    println("Escolha a coluna da peça a jogar: ")
+    val indC = getUserInputInt
+    val coordEscolhida = (indL,indC)
 
+    validPieces.contains(coordEscolhida) match
+      case true =>
+        coordEscolhida
 
-    validPieces.head
+      case false =>
+        println("Coordenada inválida! Escolha novamente.")
+        askPieces(validPieces)
+
   }
 
   def PlayerMove(state: GameState): GameState = {
 
+    println(s"Peça a movimentar: ${state._2} ")
+
     //Position Validas -> Fazer display das mesmas
     val listPlayablePieces = listPlayablePositions(state._1, state._2,state._3)
 
-    val PossiveisDestion = listValidDestinations(state._1, state._2,state._3)
+    val coordFroomPiece = askPieces(listPlayablePieces) //Pegamos aqui a peça a jogar
 
-    //Fazer Display.
+    val PossiveisDestion = listValidDestinations(state._1, state._2,state._3) //Pegamos aqui todas as casas livres
 
-    //De acordo com a peça escolhida ver quais as posições para onde jogar: List , (2) -> Fazes display destas , (3) -> Jogador escolher. Opt: Jogador pode voltar atrás.
+    val DestinoPossiveis = PossiveisDestion.filter(coordTo => isValidPlay(state._1, state._2, coordFroomPiece , coordTo, state._3)) //filtro de modo a obter apenas as casas para onde podemos jogar de acordo coma nossa peça
 
+    val coordToPiece = askPieces(DestinoPossiveis) //Peça para onde vamos jogar.
 
-    //Realizar jogada.
-    //Aqui vai nos ser devolvido um novo tab e um novas posicoes abertas , devolver novo estado.
+    //Vamos agora fazer a jogada:
 
-    state
+    val result = play(state._1, state._2 , coordFroomPiece , coordToPiece , state._3)
+
+    //(newBoard , switchPlayer(state._2) , newListOpnes)
+    result match
+      case (Some(newBoard), newOpenCoords) =>
+        (newBoard, switchPlayer(state._2), newOpenCoords) //Aqui já devolvemos o novo estado como o currentPlayer( vamos já switch para o proximo jogador)
+      case (None, _) =>
+        println("Jogada inválida!")
+        state //Aqui se calhar poderiamos repetir a jogada...
 
   }
   def ComputerMove(state: GameState): GameState = {
@@ -195,9 +214,9 @@ object GameEngine:
   @tailrec
   def gameLoop(state: GameState, history: GameHistory, timerLimit: Long, mode: GameMode): Unit = {
 
-    println("Bora para o Jogo!")
-
+    println("Tabuleiro de Jogo: ")
     printBoard(state._1) //Print da Board
+    println("")
 
     //Aqui basicamente vamos ver se alguem já ganhou. De acordo com o stone Atual.
     if isGameOver(state._1,state._2,state._3) then
@@ -206,21 +225,47 @@ object GameEngine:
       println(s"Jogador $winner ganhou")
       showMenu()
     else
-      showGameOption()
 
+      showGameOption()
       getUserInputInt match
+
         case 1 => //Aqui vai depender do tipo de jogo!
-          val timeInit = System.currentTimeMillis()
-          val newState = mode match
+
+
+          val timeInit = System.currentTimeMillis() //Começamos a contar o tempo
+
+
+          val newState = mode match //De acordo com o modo de jogo escolhido vamos realizar um tipo de jogada
+
+
             case GameMode.PvP =>
-              print("Jogo Player vs Player")
+              println("Jogo Player vs Player")
+              PlayerMove(state) //Vamos realizar a jogada //PlayerMove vai devolver o novo estado de jogo.
+
+
               //Vamos ter uma funcao para este tipo de jogo
-            case GameMode.PvC =>
-              print("Jogo Player vs Computer")
-              //Vamos ter uma funcao para este tipo de jogo
+            case GameMode.PvC => //Aqui temos que ter atenção que player está associado cada peça!
+              println("Jogo Player vs Computer")
+              ComputerMove(state) //OU PlayerMove(state)
+
             case GameMode.CvC =>
               println("Computer vs Computer")
-              //Vamos ter uma funcao para este tipo de jogo
+              ComputerMove(state) //Aqui é sempre Computer Move.
+
+            //Tempo excedido só faz sentido para jogos player vs player ou player vs computer.
+
+          //Calculo de tempo excedido.
+          isTimeExceeded(timeInit, timerLimit) match
+            case true => println("Aqui vamos ter de fazer uma nova jogaga")
+            case _ => println("Jogada feita a tempo")
+
+
+          val newHistory = state :: history
+          gameLoop( newState , newHistory , timerLimit, mode)
+
+
+
+
         case 2 =>
           undoMove(history) match
             case Some((estadoAnrigo, restoHistoria)) =>
@@ -229,11 +274,27 @@ object GameEngine:
             case None =>
               println("Sem jogadas para desfazer!")
               gameLoop(state, history, timerLimit, mode)
+
+
+
+
         case 3 =>
           val (newState, newTimer, newMode) = setupOfGame
           gameLoop(newState,Nil ,newTimer, newMode)
+
+
+
+
         case 4 =>
           println("A sair...")
+
+
+
+
+
+
+
+
         case _ =>
           println("Opção Inválida ")
           gameLoop(state,history,timerLimit, mode)
