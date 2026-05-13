@@ -223,16 +223,57 @@ object GameEngine:
 
     //Vamos agora fazer a jogada:
 
-    val result = play(state._1, state._2 , coordFroomPiece , coordToPiece , state._3)
+    val result = play(state._1, state._2 , coordFroomPiece , coordToPiece , state._3) //Result -> Nova Board e Posições Abertas
+
 
     //(newBoard , switchPlayer(state._2) , newListOpnes)
     result match
       case (Some(newBoard), newOpenCoords) =>
-        (newBoard, switchPlayer(state._2), newOpenCoords) //Aqui já devolvemos o novo estado como o currentPlayer( vamos já switch para o proximo jogador)
+        val (finalBoard, finalOpenCoords) = continuePlayerCaptures(newBoard, state._2, coordToPiece, newOpenCoords)
+        (finalBoard, switchPlayer(state._2), finalOpenCoords)
+
+
       case (None, _) =>
         println("Jogada inválida!")
         state //Aqui se calhar poderiamos repetir a jogada...
 
+  }
+
+  @tailrec
+  def continuePlayerCaptures(board: Board, player: Stone, currentPos: Coord2D, openCoords: List[Coord2D]): (Board, List[Coord2D]) = {
+    // Descobrir próximos movimentos válidos
+    val nextDestinations = validDestinationsFromPiece(board, player, currentPos, openCoords)
+    // Se não houver mais jogadas possíveis
+    if nextDestinations.isEmpty then
+      (board, openCoords)
+    else
+      println(s"Podes continuar a capturar com a peça em $currentPos")
+      println("Querem Continuar a jogar?")
+      println("1 -> Sim")
+      println("2 -> Não")
+      getUserInputInt match
+        case 1 =>
+          println(s"Destinos possíveis: $nextDestinations")
+          // Jogador escolhe próximo destino
+          val nextCoordTo = askPieces(nextDestinations)
+
+          // Executa nova captura
+          val result = play(board, player, currentPos, nextCoordTo, openCoords)
+
+          result match
+            case (Some(newBoard), newOpenCoords) =>
+              // Continua recursivamente
+              continuePlayerCaptures(newBoard, player, nextCoordTo, newOpenCoords)
+            case (None, _) =>
+              println("Jogada inválida!")
+              // Mantém estado atual
+              (board, openCoords)
+
+        case 2 => (board, openCoords)
+
+        case _ =>
+          println("Escolha uma opção VALIDA!")
+          continuePlayerCaptures(board , player , currentPos, openCoords)
   }
 
 

@@ -72,6 +72,11 @@ object Konane:
     loop(0, 0, ParMap.empty) //Basicamente é isto que vamos devolver
   }
 
+  def validDestinationsFromPiece(board: Board, player: Stone, coordFrom: Coord2D, openCoords: List[Coord2D]): List[Coord2D] = {
+    val possibleDestinations = listValidDestinations(board, player, openCoords)
+    possibleDestinations.filter(coordTo => isValidPlay(board, player, coordFrom, coordTo, openCoords))
+  }
+
 
   // função de jogada
   def play(board: Board, player: Stone, coordFrom: Coord2D, coordTo: Coord2D, lstOpenCoords: List[Coord2D]): (Option[Board], List[Coord2D]) = {
