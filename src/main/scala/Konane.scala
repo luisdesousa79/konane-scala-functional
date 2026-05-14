@@ -38,7 +38,7 @@ object Konane:
     // guarda a coordenada que corresponde ao índice aleatório escolhido
     val coord = lstOpenCoords(randomIndex)
 
-    //devolve coordenada e
+    //devolve coordenada e nova seed
     (coord, newRandState)
   }
 
