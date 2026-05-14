@@ -1,6 +1,8 @@
-import Konane.*
+import 
+Konane.*
 import scala.collection.parallel.immutable.ParMap
 import TUI.*
+
 
 @main
 def main(): Unit = {

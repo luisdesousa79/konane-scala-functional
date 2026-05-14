@@ -1,7 +1,9 @@
 import com.sun.source.tree.WhileLoopTree
 
+
 import scala.collection.parallel.immutable.ParMap
 import scala.annotation.tailrec
+
 
 object Konane:
 

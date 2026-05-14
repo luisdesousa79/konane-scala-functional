@@ -68,6 +68,7 @@ object TUI {
     println("1. Fazer jogada")
     println("2. Reiniciar jogo")
     println("3. Sair do jogo")
+    println("4. desfazer jogada")
     print("Escolha: ")
 
     scala.io.StdIn.readLine() match {
@@ -157,10 +158,17 @@ object TUI {
         println("Saindo do jogo...")
         menu()
 
+      case "4" => //desfazer a jogada
+        Konane.undoMove(history)
+        loopJogo(board, lstOpenCoords, currentPlayer, rand, history,
+          dificuldade, tempoMaximo, dimensao)
+
       case _ => // Opção inválida
         println("Opcao invalida!")
         loopJogo(board, lstOpenCoords, currentPlayer, rand, history,
           dificuldade, tempoMaximo, dimensao)
+
+
     }
   }
   //T4
