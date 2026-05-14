@@ -8,6 +8,6 @@ lazy val root = (project in file("."))
   )
 libraryDependencies += "org.scala-lang.modules" %% "scala-parallel-collections" % "1.2.0"
 
-libraryDependencies += "org.openjfx" % "javafx-base" % "25.0.2"
-libraryDependencies += "org.openjfx" % "javafx-controls" % "25.0.2"
-libraryDependencies += "org.openjfx" % "javafx-fxml" % "25.0.2"
+libraryDependencies += "org.openjfx" % "javafx-base" % "26-ea+1" classifier "win"
+libraryDependencies += "org.openjfx" % "javafx-controls" % "26-ea+1" classifier "win"
+libraryDependencies += "org.openjfx" % "javafx-fxml" % "26-ea+1" classifier "win"
