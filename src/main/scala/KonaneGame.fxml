@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="KonaneGameController" prefWidth="900" prefHeight="700">
+
+    <!-- Topo -> Aqui irá aparecer o Header -->
+    <top>
+        <HBox spacing="20" alignment="CENTER" BorderPane.alignment="CENTER">
+            <padding><Insets top="15" right="15" bottom="15" left="15"/></padding>
+            <Label fx:id="currentPlayerLabel" text="Current Player: Black"/>
+            <Label fx:id="gameModeLabel" text="Mode: PvP"/>
+            <Label fx:id="timerLabel" text="Time: 10:00"/>
+            <Label fx:id="InfLayer" text="Bom Jogo!"/>
+            
+        </HBox>
+    </top>
+
+    <!-- Centro -> Aqui que irá ficar o tabuleiro-->
+    <center>
+        <GridPane fx:id="boardGrid" alignment="CENTER" hgap="5" vgap="5" BorderPane.alignment="CENTER">
+            <padding>
+                <Insets top="20" right="20" bottom="20" left="20"/>
+            </padding>
+        </GridPane>
+
+    </center>
+    <!-- Botões Funcionais-->
+    <bottom>
+        <HBox spacing="15" alignment="CENTER">
+            <padding>
+                <Insets top="15" right="15" bottom="15" left="15"/>
+            </padding>
+            <Button fx:id="Restart" text="Recomeçar Jogo" onAction="#RestartGame" />
+            <Button fx:id="Undo" text="Undo" onAction="#UndoGame"/>
+            <Button fx:id="Sair" text="Sair" onAction="#LeaveGame"/>
+            <Button  fx:id="computerButton" text="Realizar Jogada de Computador" onAction="#ComputerJoga"/>
+        </HBox>
+
+    </bottom>
+
+</BorderPane>

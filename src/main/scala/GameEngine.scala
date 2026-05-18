@@ -7,11 +7,12 @@ import scala.annotation.tailrec
 import scala.io.StdIn.readLine
 import scala.util.{Failure, Success, Try}
 import GameMode.*
+import Phase.{Capturing, InitialRemoval, Playing, SecondRemoval}
 
 object GameEngine:
 
   @tailrec
-  def showMenu(): Unit = {
+  def showMenu(): Unit = { //Usado
     print("1. Iniciar Jogo \n")
     print("2. Sair \n")
     println("Escolha sua opção: ")
@@ -21,7 +22,9 @@ object GameEngine:
     getUserInputInt match
       case 1 =>
         val (state, timer, mode , dificuldade) = setupOfGame
-        gameLoop(state,Nil,timer,mode, rand0 , dificuldade) //Aqui irá começar o fluxo do jogo
+        val contextoInicial = GameContext(state,Phase.InitialRemoval,None,mode, dificuldade,timer,rand0,Nil)  //Aqui irá começar o fluxo do jogo
+        gameLoop4(contextoInicial)
+
 
       case 2 => print("A sair...")
       case _ =>
@@ -39,7 +42,7 @@ object GameEngine:
         println("Número inválido!")
         getUserInputInt
     }
-  }
+  } //Usado
 
   @tailrec
   def chooseGame: GameMode = {
@@ -53,7 +56,7 @@ object GameEngine:
       case 3 => GameMode.CvC
       case _ => println("Escolha uma opcão válida!")
         chooseGame
-  }
+  } //Usado
 
   @tailrec
   def chooseDificuldade: Difficulty = {
@@ -70,7 +73,7 @@ object GameEngine:
       case _ =>
         println("Coloque um valor Válido!")
         chooseDificuldade
-  }
+  } //Usado
 
   def difficultyLimit(diff: Difficulty): Int =
     diff match
@@ -93,11 +96,10 @@ object GameEngine:
         println("Valor inválido.")
         chooseTimer
     }
-  }
+  } //Usado
 
 
   def chooseTamanhoTab: (Int, Int) = {
-
     println("Vamos escolher o tamanho do Tabuleiro!")
     println("Largura:")
     val largura = getUserInputInt
@@ -107,33 +109,15 @@ object GameEngine:
     print("Comprimento:")
     val comprimento = getUserInputInt
     (largura, comprimento)
+  } //Usada na escolha do Tamanho -> Implementar Restrições de Tamanho -> Tamanho Minimo e Máximo.
+
+  //Errado
+  def pecasRemover2(row: Int, cols: Int): List[Coord2D] = { //Apenas usado no Controoller Game.-> GUI.
+    List((0,0), (row -1,cols -1))
   }
 
-  def possibleInitialRemovals(rows: Int, cols: Int): List[(Coord2D, Coord2D)] = {
-    List(((0, cols - 2), (0, cols - 1)), ((rows / 2, cols / 2 - 1), (rows / 2, cols / 2)), ((rows - 1, 0), (rows - 1, 1)))
-    //Devolvemos uma lista de conjunto de posições livres. Tendo em conta que as regras konane apenas permitem remover no meio e no canto superior direito , inferior esquerdo.
-  }
 
-  //Tail recursive Modificar
-  @tailrec
-  def chooseInitPosToRemove(rows: Int, cols: Int): List[Coord2D] = {
-    val options = possibleInitialRemovals(rows, cols)
 
-    println("Escolha o conjunto de posições iniciais a remover:")
-    println(s"1 -> ${options.head}")
-    println(s"2 -> ${options(1)}")
-    println(s"3 -> ${options(2)}")
-
-    val escolha = getUserInputInt
-
-    escolha match {
-      case 1 => List(options.head._1, options.head._2)
-      case 2 => List(options(1)._1, options(1)._2)
-      case 3 => List(options(2)._1, options(2)._2)
-      case _ => println("Opção inválida.")
-        chooseInitPosToRemove(rows, cols)
-    }
-  }
 
   def setupOfGame: (GameState, Long, GameMode , Difficulty) = {
     println("Configuarações de jogo ")
@@ -153,33 +137,24 @@ object GameEngine:
     println("Eis o Tabuleiro de jogo")
     printBoard(boardShow)
 
-    //Escolher Peças a serem removidas (as duas primeiras)
-    val removed = chooseInitPosToRemove(lagura, comprimento)
 
-    //val board0 = removePecas(boardShow, removed) //Remover as peças
 
     //Criar o GameSatet
-    val gameSate0 = new GameState(removePecas(boardShow, removed), Stone.Black, removed) //Podemos Melhorar , no caso de ser PvP ou PvC a pessoa poder escolher a sua peça (Preta ou Branca)
-
-
+    val gameSate0 = new GameState(boardShow, Stone.Black, List())
 
     val dificuldade = chooseDificuldade
 
 
     (gameSate0, timer, mode_game, dificuldade)
-  }
+  } //Usada
   //Vamos fazer setup das condições de jogo sendo estas:  Tipo Jogo, Tamanho Tabuleiro , Peças a remover , Tempo Máximo de jogo(timer)
 
-  def switchPlayer(player: Stone): Stone =
-    player match
-      case Stone.Black => Stone.White
-      case Stone.White => Stone.Black
 
   def showGameOption(): Unit = {
     println("Escolha uma opção abaixo: ")
     println("1 -> Realizar Jogada")
     println("2 -> Undo") //Susceptivel a alterações, só faz sentido ter undo no caso do jogo já estar a rodar.
-    println("3 -> Reiniciar")
+    println("3 -> Reinicia Jogo -> Voltar ao Menu Inicial")
     println("4 -> Sair")
   }
 
@@ -188,11 +163,11 @@ object GameEngine:
 
     println("De acordo com as Peças a seguir:")
 
-    validPieces.foreach((x, y) => println(s"Position: ($x , $y)"))
+    validPieces.foreach((x, y) => println(s"Position: ($x , $y)")) //Mudar!
 
-    println("Escolha a linha da peça a jogar: ")
+    println("Escolha a linha: ")
     val indL = getUserInputInt
-    println("Escolha a coluna da peça a jogar: ")
+    println("Escolha a coluna: ")
     val indC = getUserInputInt
     val coordEscolhida = (indL,indC)
 
@@ -237,7 +212,7 @@ object GameEngine:
         println("Jogada inválida!")
         state //Aqui se calhar poderiamos repetir a jogada...
 
-  }
+  } //Usado na versão Anterior!
 
   @tailrec
   def continuePlayerCaptures(board: Board, player: Stone, currentPos: Coord2D, openCoords: List[Coord2D]): (Board, List[Coord2D]) = {
@@ -274,66 +249,12 @@ object GameEngine:
         case _ =>
           println("Escolha uma opção VALIDA!")
           continuePlayerCaptures(board , player , currentPos, openCoords)
-  }
+  } //Usado na versão Anterior
 
 
-  def ComputerMove(state: GameState, difficulty: Difficulty, rand: MyRandom): (GameState , MyRandom)= {
-
-    val PositionCanPlay = listPlayablePositions(state._1, state._2, state._3) //Posições/Peças que podem ser usadas para jogar.
-    val (coordFrom, r2) = randomMove(PositionCanPlay, rand) //Escolha de uma peça aleatoria
-
-    val possibleDestinations = listValidDestinations(state._1, state._2, state._3) //Peças que podemos ir para lá jogar(Destinos válidos)
-
-    val validDestinations = possibleDestinations.filter(coordTo => isValidPlay(state._1, state._2, coordFrom, coordTo, state._3))//De acordo com a Peça escolhida anterioramente de forma aleatoria vemos para onde esta pode ir.
-
-    val (coordTo, r3) = randomMove(validDestinations, r2) //Escolha de destino aleatorio.
-
-    val (newBoardOpt, newOpenCoords) = play(state._1, state._2, coordFrom, coordTo, state._3) //realizar primeira jogada.
-    
-    println(s"Jogada Realizada $coordFrom -> $coordTo")
-
-    newBoardOpt match
-      case None => (state,r3) //Devolvemos o estado Atual do jogo, Ou seja não houve jogada
-
-      case Some(newBoard) =>
-        val capturesLeft = difficultyLimit(difficulty) //O maximo de Capturas que podemos fazer (ex: Para cada dificuldade iremos ter um maximo de jogadas possiveis (hard não tem)
-
-        val (finalBoard, finalOpenCoords, ryp) = continueCaptures(newBoard, state._2, coordTo, newOpenCoords, capturesLeft, r3) //Aqui fazemos multiplcas capturas
-        val newstate = (finalBoard, switchPlayer(state._2), finalOpenCoords)
-
-        (newstate, ryp)
-        //Aqui já devolvemos a final board depois de fazer as multiplas capturas.
-  }
-
-  @tailrec
-  def continueCaptures(board: Board, player: Stone, currentPos: Coord2D, openCoords: List[Coord2D], remainingCaptures: Int, rand: MyRandom): (Board, List[Coord2D], MyRandom) = {
-
-    // Se não podemos continuar capturas , remaining Captures será o "capturesLeft" presente ComputerMove
-    if remainingCaptures <= 0 then
-      (board, openCoords, rand)
-    else
-      // Todas as posições vazias possíveis -> Para onde podemos jogar (o mesmo que foi feito no ComputerMove)
-      val possibleDestinations = listValidDestinations(board, player, openCoords)
-
-      val validDestinations = possibleDestinations.filter(coordTo => isValidPlay(board, player, currentPos, coordTo, openCoords))  // Filtramos apenas destinos válidos para a peça atual
-
-      // Se não houver mais capturas possíveis
-      if validDestinations.isEmpty then
-        (board, openCoords, rand) //Devolvemos basicamente o que tinha chegado cá
-      else
-
-        val (nextCoordTo, r2) = randomMove(validDestinations, rand)// Escolhe próximo destino aleatoriamente
-        // Executa mais um salto
-        val (newBoardOpt, newOpenCoords) = play(board, player, currentPos, nextCoordTo, openCoords) // Executa mais um salto
-        println(s"Jogada Realizada na captura multipla: $currentPos -> $nextCoordTo ")
-        newBoardOpt match
-          case None => (board, openCoords, r2) //Possivel erro (jogada não realizada , devolvemos oq já tinhamos
-          case Some(newBoard) =>
-            continueCaptures(newBoard, player, nextCoordTo, newOpenCoords, remainingCaptures - 1, r2) // Continua recursivamente
-  }
 
 
-  //Aqui que o jogo vai "rodar"
+
   @tailrec
   def gameLoop(state: GameState, history: GameHistory, timerLimit: Long, mode: GameMode, r: => MyRandom , diff: => Difficulty ): Unit = {
 
@@ -344,18 +265,16 @@ object GameEngine:
     //Aqui basicamente vamos ver se alguem já ganhou. De acordo com o stone Atual.
     if isGameOver(state._1,state._2,state._3) then
       val winner = switchPlayer(state._2)
-      println("Game Over!!!!!!!!!")
+      println("Game Over!!")
       println(s"Jogador $winner ganhou")
       showMenu()
     else
 
       showGameOption()
+
       getUserInputInt match
-
         case 1 => //Aqui vai depender do tipo de jogo!
-
           val timeInit = System.currentTimeMillis() //Começamos a contar o tempo
-
 
           val (newState , rp ) = mode match //De acordo com o modo de jogo escolhido vamos realizar um tipo de jogada, aqui vamos pegar o novoEstado, e o novo (caso seja preciso) Random
 
@@ -372,12 +291,14 @@ object GameEngine:
                 val estado = PlayerMove(state)
                 (estado, r)
               else
-                val (result, newR) = ComputerMove(state , diff, r)
+                val (result, newR , jogadasFeitas) = ComputerMove(state , diff, r)
+                print(jogadasFeitas)
                 (result,newR)
 
             case GameMode.CvC =>
               println("Computer vs Computer")
-              val (result, newR) = ComputerMove(state , diff, r) //Aqui é sempre Computer Move.
+              val (result, newR , jogadasFeitas) = ComputerMove(state , diff, r) //Aqui é sempre Computer Move.
+              print(jogadasFeitas)
 
               (result,newR)
 
@@ -413,6 +334,149 @@ object GameEngine:
           gameLoop(state,history,timerLimit, mode , r , diff)
 
 
+  } //Usado na versão Anterior.
+
+
+
+  //////////////////////  Atual Aqui.
+
+
+  def gameLoop4(ctx: GameContext): Unit = {
+
+    printBoard(ctx.state._1) //Mostramos o tabuleiro.
+    println(s"Jogador atual: ${ctx.state._2}") //Indicamos o Jogador Atual.
+
+    if (isGameOver(ctx.state._1, ctx.state._2, ctx.state._3) && ctx.phase != Phase.InitialRemoval && ctx.phase != Phase.SecondRemoval) then
+      val Vencedor = switchPlayer(ctx.state._2)
+      println(s"Jogo Acabou! Vencedor: $Vencedor")
+      showMenu() //Mostramos o Menu Novamente
+    else
+      showGameOption() //Opções de Jogo -> Realizar Jogada , Undo (voltamos uma jogada Atrás), Reinicar(voltar ao Meuno)
+      getUserInputInt match
+
+        case 1 => //Realizar jogada
+          executeTurn(ctx) match //Executa-mos turno de jogada, ou seja Jogador Escolhe uma peça , Escolhe outra e fazemos jogada.
+            case Some(newCtx) => //newCtx -> Novo contexto de jogo.
+              gameLoop4(newCtx)  //Loop de jogo -> Outro Player Irá jogar.
+
+            case None =>
+              println("Erro na jogada") //Erro na jogada , voltamos ao contexto Atual -> Não deve chegar Aqui
+              gameLoop4(ctx)
+
+        case 2 =>
+          println("A fazer Undo")
+          Konane.undoMove(ctx.history) match {
+            case Some((estadoAntigo, remainingHistory)) => //Caso tenhamos alguns estado colocamos o state como estadoAntigo , usamos o remainingHistory ( resto da historia)
+              println("Undo realizado com sucesso!!!")
+              gameLoop4(ctx.copy(state = estadoAntigo, history = remainingHistory, phase = Phase.Playing, selected = None)) //A fase terá de ser Playing , sem nenhuma peça selecionada. Estado InitRemove e SecondRemove não atingiveis usando Undo.
+            case None =>
+              println("Sem jogadas no histórico para desfazer -> Undo não feito.") //Sem Undo -> Devolvemos Nil
+              gameLoop4(ctx)
+          }
+
+        case 3 =>
+          showMenu()
+        case 4 =>
+          println("A sair...")
+
+        case _ =>
+          println("Clique numa opção valida!")
+          gameLoop4(ctx) //Voltamos ao Inicio.
+  } //gameLoop Atual !
+
+
+
+  def isComputerTurn(ctx: GameContext): Boolean = {
+    ctx.mode match
+      case PvP => false
+      case PvC =>
+        ctx.state._2 == Stone.White
+      case CvC =>
+        true
   }
+
+  def phaseMessage(ctx: GameContext): String = {
+    ctx.phase match
+      case InitialRemoval =>
+        "Escolha a primeira peça a remover"
+
+      case SecondRemoval =>
+        "Escolha a segunda peça adjacente"
+
+      case Playing =>
+        ctx.selected match
+          case None =>
+            "Escolha uma peça para Jogar"
+
+          case Some(piece) =>
+            s"Escolha destino para $piece"
+
+      case Capturing =>
+        val piece = ctx.selected match
+          case None =>
+            None
+          case Some(piece) =>
+            piece
+        s"Pode continuar a capturar , seleciona uma peça diferente ou a tua ${piece} ( Selecionar a tua peça faz com que a captura pare)"
+
+  }
+
+
+  def turnFinished(oldCtx: GameContext, newCtx: GameContext): Boolean = {
+    oldCtx.state._2 != newCtx.state._2 //Aqui vemos quem esta a jogar antes e depois.
+  }
+
+  @tailrec
+  def executeTurn(ctx: GameContext): Option[GameContext] = {
+
+
+    val validMoves = getValidInteractions(ctx.state , ctx.phase, ctx.selected) //Moves Válidos Atualmente -> Na primeira execucão esta nos devolve apenas as posiçoes para onde podemos nos mover.
+
+
+    val nextCtxOpt =
+      if isComputerTurn(ctx) then
+        println(s"Computador vai jogar , Peça do Mesmo; ${ctx.state._2} ")
+        computerInteraction(ctx, validMoves) //Se estivermos no Turno de Computador -> ComputerInteraction.
+      else
+        println(phaseMessage(ctx)) //Demonstramos o Contexto do Jogo Atual. //No caso de ser o Computador a jogar -> Não faz sentido
+        //Aqui poderiamos perguntar se continua ou não
+        //Case Capturing. Caso sim fazemos uma forma de mandar a peça para o playerIntercation.
+        playerInteraction(ctx, validMoves) //Se tivermos no Turno do Humano/Player -> playerInteraction
+
+    nextCtxOpt match
+
+      case Some(newCtx) =>
+        if turnFinished(ctx, newCtx) then //Caso o turno nao tenha fechado, ou seja o jogador Atual ainda é o Mesmo que entrou vamos para o "Else" no caso em que já mudamos de jogador -> O turno deste Acabou.
+          Some(newCtx)
+        else
+          executeTurn(newCtx) //Executamos o turno novamente Aqui -> Fase Capturing Aqui, ou Escolha de Segunda Peça.
+
+      case None =>
+        None //Demonstra que ocorreu algum tipo de erro Aqui.
+  }
+
+  
+  def playerInteraction(ctx: GameContext, validInteractions: List[Coord2D]): Option[GameContext] = {
+    //Ou aqui escolhemos para ele parar ou não.
+    val chosenCoord = askPieces(validInteractions)
+    processInteraction(ctx, chosenCoord)
+  }
+
+  //Limitar aqui de acordo com a dificuldade do jogo.
+  def computerInteraction(ctx: GameContext, validInteractions: List[Coord2D]): Option[GameContext] = { //Usar a dificuldade Aqui, Falta Implementar Isso.
+    val (chosenMove, newRand) = randomMove(validInteractions, ctx.random) //Escolhe uma peça de forma aleatoria, de acordo com o validIntercations
+    val updatedCtx = ctx.copy(random = newRand) //Uptade do contexto, Apenas Mudamos o Random -> Obrigatório.
+    processInteraction(updatedCtx, chosenMove) //Usamos o processador de Interações. Este devolve o novo estado.
+  }
+
+
+
+
+
+
+
+
+
+
 
 
