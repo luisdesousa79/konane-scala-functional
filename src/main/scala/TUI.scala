@@ -1,11 +1,27 @@
-import com.sun.source.tree.WhileLoopTree
-
-import scala.collection.parallel.immutable.ParMap
 import scala.annotation.tailrec
-
 import Konane.*
 
+
 object TUI:
+
+  @tailrec
+  def printPecas(validPieces: List[Coord2D]): Unit =
+    validPieces match {
+      case Nil => ()
+      case (x, y) :: tail =>
+        println(s"Posicão: ($x, $y)")
+        printPecas(tail)
+    }
+
+  @tailrec
+  def printMoves(moves: List[(Coord2D, Coord2D)]): Unit =
+
+    moves match {
+      case Nil => ()
+      case (from, to) :: tail =>
+        println(s"$from -> $to")
+        printMoves(tail)
+    }  //Usado apenas para demonstrar as jogadas do Computador.
   //T4
   // Converte Stone para Char
   def stoneToChar(stone: Stone): Char = stone match {
@@ -26,10 +42,10 @@ object TUI:
   }
 
   // Gera header (A B C D ...) , como no exemplo do enunciado
-  def printHeader(size: Int): Unit = {
+  def printHeader(cols: Int): Unit = {
     @tailrec
     def loop(col: Int): Unit =
-      if col < size then //basicamente vamos percorrer as letras de acordo com o tamanho do tabuleiro.
+      if col < cols then
         print(s"${('A' + col).toChar} ")
         loop(col + 1)
       else println()
@@ -38,12 +54,13 @@ object TUI:
     loop(0)
   }
 
+
   // Gera uma linha
-  def printRow(board: Board, row: Int, size: Int): Unit = {
+  def printRow(board: Board, row: Int, cols: Int): Unit = {
     @tailrec
     def loop(col: Int): Unit =
-      if col < size then
-        val celula = getCelula(board, (row, col)) //aqui vamos percorrer os outros elementos da coluna, ou seja já estamos na linha.
+      if col < cols then
+        val celula = getCelula(board, (row, col))
         print(s"$celula ")
         loop(col + 1)
       else println()
@@ -54,14 +71,15 @@ object TUI:
 
   // Função principal que vai chamar as outras auxiliares
   def printBoard(board: Board): Unit = {
-    val size = boardSize(board) //calculamos o tamanho da board.
+    val rows = board.keys.map(_._1).max + 1
+    val cols = board.keys.map(_._2).max + 1
 
-    printHeader(size) //fazemos print do header(cabecalho) como na imagem do enunciado
+    printHeader(cols)
 
     @tailrec
     def loop(row: Int): Unit =
-      if row < size then //aqui percorremos linha a linha, as outras funções vao percorrer coluna a coluna.
-        printRow(board, row, size)
+      if row < rows then
+        printRow(board, row, cols)
         loop(row + 1)
 
     loop(0)

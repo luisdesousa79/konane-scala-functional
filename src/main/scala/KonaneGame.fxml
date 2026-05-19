@@ -6,42 +6,89 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="KonaneGameController" prefWidth="900" prefHeight="700">
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="KonaneGameController" prefWidth="900" prefHeight="700" style="-fx-background-color: linear-gradient(to bottom, #eef2f7, #d6dde8);">
 
-    <!-- Topo -> Aqui irá aparecer o Header -->
+    <!-- Topo -> Header -->
     <top>
-        <HBox spacing="20" alignment="CENTER" BorderPane.alignment="CENTER">
-            <padding><Insets top="15" right="15" bottom="15" left="15"/></padding>
-            <Label fx:id="currentPlayerLabel" text="Current Player: Black"/>
-            <Label fx:id="gameModeLabel" text="Mode: PvP"/>
-            <Label fx:id="timerLabel" text="Time: 10:00"/>
-            <Label fx:id="InfLayer" text="Bom Jogo!"/>
-            
-        </HBox>
+        <VBox spacing="8"
+              alignment="CENTER"
+              BorderPane.alignment="CENTER"
+              style="-fx-padding: 10;">
+
+            <!-- Título -->
+            <Label text="KONANE"
+                   style="-fx-font-size: 22px;
+                          -fx-font-weight: bold;
+                          -fx-text-fill: #1f2d3d;" />
+
+            <!-- Estados do jogo -->
+            <HBox spacing="10" alignment="CENTER" style="-fx-background-color: rgba(255,255,255,0.75);-fx-padding: 8;
+                      -fx-background-radius: 10;">
+
+                <Label fx:id="currentPlayerLabel" text="" style="-fx-font-size: 13px;
+                              -fx-font-weight: bold;
+                              -fx-text-fill: #2c3e50;" />
+
+                <Label fx:id="gameModeLabel" text="⚔ Mode:" style="-fx-font-size: 13px;
+                              -fx-font-weight: bold;
+                              -fx-text-fill: #2c3e50;" />
+
+                <Label fx:id="timerLabel" text="Time: " style="-fx-font-size: 13px;
+                              -fx-font-weight: bold;
+                              -fx-text-fill: #2c3e50;" />
+
+                <Label fx:id="InfLayer" text="Bom Jogo!" style="-fx-font-size: 13px;
+                              -fx-font-weight: bold;
+                              -fx-text-fill: #2c3e50;" />
+            </HBox>
+
+        </VBox>
     </top>
 
-    <!-- Centro -> Aqui que irá ficar o tabuleiro-->
+    <!-- Centro -> Tabuleiro -->
     <center>
         <GridPane fx:id="boardGrid" alignment="CENTER" hgap="5" vgap="5" BorderPane.alignment="CENTER">
             <padding>
                 <Insets top="20" right="20" bottom="20" left="20"/>
             </padding>
         </GridPane>
-
     </center>
-    <!-- Botões Funcionais-->
-    <bottom>
-        <HBox spacing="15" alignment="CENTER">
-            <padding>
-                <Insets top="15" right="15" bottom="15" left="15"/>
-            </padding>
-            <Button fx:id="Restart" text="Recomeçar Jogo" onAction="#RestartGame" />
-            <Button fx:id="Undo" text="Undo" onAction="#UndoGame"/>
-            <Button fx:id="Sair" text="Sair" onAction="#LeaveGame"/>
-            <Button  fx:id="computerButton" text="Realizar Jogada de Computador" onAction="#ComputerJoga"/>
-        </HBox>
 
+    <!-- Botões -->
+    <bottom>
+        <HBox spacing="15" alignment="CENTER" style="-fx-background-color: rgba(255,255,255,0.65);
+                 -fx-padding: 12;
+                 -fx-background-radius: 10;">
+
+            <Button fx:id="Restart" text="Recomeçar Jogo" onAction="#RestartGame" style="-fx-background-color: #3498db;
+                       -fx-text-fill: white;
+                       -fx-font-weight: bold;
+                       -fx-background-radius: 8;
+                       -fx-padding: 8 16 8 16;
+                       -fx-cursor: hand;" />
+            <!-- Undo -->
+            <Button fx:id="Undo" text="Undo" onAction="#UndoGame" style="-fx-background-color: #f39c12;
+                       -fx-text-fill: white;
+                       -fx-font-weight: bold;
+                       -fx-background-radius: 8;
+                       -fx-padding: 8 16 8 16;
+                       -fx-cursor: hand;" />
+            <!-- Sair do jogo -->
+            <Button fx:id="Sair" text="Sair" onAction="#LeaveGame" style="-fx-background-color: #e74c3c;
+                       -fx-text-fill: white;
+                       -fx-font-weight: bold;
+                       -fx-background-radius: 8;
+                       -fx-padding: 8 16 8 16;
+                       -fx-cursor: hand;" />
+            <Button fx:id="computerButton" text="Realizar Jogada de Computador" onAction="#ComputerJoga" style="-fx-background-color: #2ecc71;
+                       -fx-text-fill: white;
+                       -fx-font-weight: bold;
+                       -fx-background-radius: 8;
+                       -fx-padding: 8 16 8 16;
+                       -fx-cursor: hand;" />
+        </HBox>
     </bottom>
 
 </BorderPane>
